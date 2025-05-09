@@ -8,6 +8,8 @@ backend updated for new update
 
 profile timeline, reviews, and bio update
 
+seller portal updated with reviews
+
 gov world trade button added
 
 gov market update goverment world trade section 
