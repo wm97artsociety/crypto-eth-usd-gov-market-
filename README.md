@@ -1,6 +1,6 @@
 # crypto-eth-usd-gov-market-
 
-perfect software ready for selling
+perfect software ready for selling just add wallet admin address, and payment and nft apis 
 
 new update v1.02
 
