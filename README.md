@@ -2,6 +2,8 @@
 
 perfect software ready for selling just add wallet admin address, and payment and nft apis 
 
+rule section for gov market needs to be updated for gov sellers 
+
 
 new update v1.03
 -
@@ -13,7 +15,9 @@ support section added to gov market hub to sign up to be goverment seller for it
 
 updated product database for gov sellers 
 
-restricted everyday sellers on gov market ( only for gov sellers)  
+restricted everyday sellers on gov market ( only for gov sellers)
+
+
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
