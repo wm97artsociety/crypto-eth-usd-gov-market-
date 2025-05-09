@@ -5,6 +5,7 @@ perfect software ready for selling just add wallet admin address, and payment an
 
 new update v1.03
 -
+main index home page listing viewer updated 25 main listings on each page with automatic new pages when listings are made 
 
 gov market added (gov index market page with solo listings for gov vendors)
 
