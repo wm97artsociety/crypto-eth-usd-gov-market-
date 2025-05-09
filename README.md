@@ -4,6 +4,7 @@ perfect software ready for selling just add wallet admin address, and payment an
 
 
 new update v1.03
+-
 
 gov market added (gov index market page with solo listings for gov vendors)
 
@@ -12,6 +13,7 @@ support section added to gov market hub to sign up to be goverment seller for it
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 new update v1.02
+-
 
 backend updated for new update
 
@@ -35,9 +37,12 @@ general rules for sellers, buyers and transactions
 
 
 for extra database you get set up more databases such as w1 w2 w3 and run firebase api for the newer product listings to save on fees and cost leaving around 15 dollars to maintain the marketplace 
+=
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 new update v1.01
+-
 
 social media posts
 
