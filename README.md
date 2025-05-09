@@ -32,7 +32,7 @@ new update v1.01
 
 social media posts
 
-token id and contract section for nfts (needs api)
+token id and contract section for nfts (needs okx, opensea, rarible ect api)
 
 SEO for products google index,product htmls for max views on the worldwideweb seo is search enigine opitimization when you look up red hat it shows things of red hats youre hat would show on this list
 
@@ -48,7 +48,7 @@ market made for other sellers now with admin abilty
 
 added seller portal for selling items for everyone
 
-update okx rarible opensea api for nft listings ( nfts have been added with lazy gas option if nft provider like rarible allows)
+update okx rarible opensea api for nft listings ( nfts have been added with lazy gas option if nft provider like rarible allows through api)
 
 added tax portal for sellers and admin where it totals orders for easy taxation 30% saved in another crypto wallet for taxes while having the abilty to print out a tax form for the 30% fee from gov on a downloadable form broke down into payouts of each goverment branch to what is the final amount paid to seller
 
