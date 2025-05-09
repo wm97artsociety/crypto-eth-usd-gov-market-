@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF="8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🛠️ Admin Panel</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -220,6 +221,24 @@
              background-color: #333333;
          }
 
+        /* Styles for GOV Sellers Section */
+        #govSellersSection .seller-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            word-break: break-all; /* Break long wallet addresses */
+        }
+         #govSellersSection .seller-item button {
+             width: auto; /* Override full width */
+             margin-left: 10px;
+             padding: 5px 10px; /* Smaller padding */
+         }
+
 
   </style>
 </head>
@@ -287,6 +306,22 @@
            <button onclick="location.href='product_database.html'" class="green-button product-database-button">📂 Product Database</button>
           </div>
         </div>
+
+    <div class="box" id="govSellersSection">
+        <h2>🏛️ GOV Market Seller Management</h2>
+        <p>Add and manage wallet addresses authorized to list items on the GOV Market.</p>
+
+        <h3>Add Approved Seller</h3>
+        <label for="govSellerWalletAddress">Seller Wallet Address:</label>
+        <input type="text" id="govSellerWalletAddress" placeholder="Enter wallet address (0x...)" />
+        <button id="addGovSellerBtn" class="green-button">➕ Add Seller</button>
+
+        <h3 style="margin-top: 20px;">Approved GOV Sellers</h3>
+        <ul id="govApprovedSellersList">
+            <li>Loading approved sellers...</li>
+        </ul>
+    </div>
+
 
     <div class="box">
       <h2>📬 Orders</h2>
@@ -362,7 +397,7 @@ const firebaseConfig = {
   authDomain: "YOUR_AUTH_DOMAIN", // Replace with your Auth Domain
   projectId: "YOUR_PROJECT_ID", // Replace with your Project ID
   storageBucket: "YOUR_STORAGE_BUCKET", // Replace with your Storage Bucket
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your Messaging Sender ID
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your Messaging Sender Id
   appId: "YOUR_APP_ID" // Replace with your App ID
 };
 
@@ -455,6 +490,9 @@ async function uploadImage(file) {
 }
 
 // Add Product (Now saves to Firestore)
+// NOTE: This function is for adding *general* products.
+// A separate function or modification would be needed to add *GOV* products,
+// ensuring they have the 'marketType: 'gov'' field set.
 async function addProduct() {
     const name = document.getElementById('productName').value.trim();
     const description = document.getElementById('productDescription').value.trim();
@@ -560,6 +598,9 @@ async function addProduct() {
 
         sellerWallet: sellerWallet, // Store the seller's wallet
         timestamp: firebase.firestore.FieldValue.serverTimestamp() // Add server timestamp
+        // NOTE: This function currently adds *general* products.
+        // To add a GOV product, you would need to add:
+        // marketType: 'gov',
     };
 
     try {
@@ -900,6 +941,95 @@ async function loadPaymentInfo() {
      }
 }
 
+// --- GOV Seller Management Functions ---
+
+// Function to add a GOV approved seller wallet address to Firestore
+async function addGovSeller() {
+    const walletAddressInput = document.getElementById('govSellerWalletAddress');
+    const walletAddress = walletAddressInput.value.trim().toLowerCase();
+
+    if (!walletAddress) {
+        alert('Please enter a wallet address.');
+        return;
+    }
+
+    // Basic wallet address format validation
+    if (!ethers.utils.isAddress(walletAddress)) {
+        alert('Invalid wallet address format.');
+        return;
+    }
+
+    try {
+        // Check if the wallet address already exists in the collection
+        const existingSeller = await db.collection('govApprovedSellers').where('walletAddress', '==', walletAddress).get();
+        if (!existingSeller.empty) {
+            alert('This wallet address is already approved.');
+            return;
+        }
+
+        // Add the wallet address to the 'govApprovedSellers' collection
+        await db.collection('govApprovedSellers').add({
+            walletAddress: walletAddress,
+            addedTimestamp: firebase.firestore.FieldValue.serverTimestamp() // Optional: add timestamp
+        });
+
+        alert('GOV seller added successfully!');
+        walletAddressInput.value = ''; // Clear the input field
+        loadGovApprovedSellers(); // Refresh the list
+    } catch (error) {
+        console.error("Error adding GOV seller:", error);
+        alert('Error adding GOV seller: ' + error.message);
+    }
+}
+
+// Function to load and display GOV approved seller wallet addresses
+async function loadGovApprovedSellers() {
+    const approvedSellersList = document.getElementById('govApprovedSellersList');
+    if (!approvedSellersList) return;
+
+    approvedSellersList.innerHTML = '<li>Loading approved sellers...</li>';
+
+    try {
+        const sellersSnapshot = await db.collection('govApprovedSellers').orderBy('addedTimestamp', 'desc').get();
+        const sellers = sellersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        approvedSellersList.innerHTML = ''; // Clear current list
+
+        if (sellers.length === 0) {
+            approvedSellersList.innerHTML = '<li>No approved GOV sellers yet.</li>';
+            return;
+        }
+
+        sellers.forEach(seller => {
+            const li = document.createElement('li');
+            li.className = 'seller-item';
+            li.innerHTML = `
+                <span>${seller.walletAddress}</span>
+                <button class="delete-btn" onclick="removeGovSeller('${seller.id}')">Remove</button>
+            `;
+            approvedSellersList.appendChild(li);
+        });
+
+    } catch (error) {
+        console.error("Error loading GOV approved sellers:", error);
+        approvedSellersList.innerHTML = '<li>Error loading approved sellers.</li>';
+    }
+}
+
+// Function to remove a GOV approved seller wallet address from Firestore
+async function removeGovSeller(sellerDocId) {
+    if (confirm('Are you sure you want to remove this GOV seller?')) {
+        try {
+            await db.collection('govApprovedSellers').doc(sellerDocId).delete();
+            alert('GOV seller removed successfully!');
+            loadGovApprovedSellers(); // Refresh the list
+        } catch (error) {
+            console.error("Error removing GOV seller:", error);
+            alert('Error removing GOV seller: ' + error.message);
+        }
+    }
+}
+
 
 // --- Event Listeners and Initialization ---
 
@@ -926,6 +1056,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadOrders(); // Load orders from Firestore
         loadSupportMessages(); // Load support messages from Firestore
         loadPaymentInfo(); // Load payment info when admin authenticates
+        loadGovApprovedSellers(); // Load approved GOV sellers
 
 
       } else {
@@ -943,10 +1074,11 @@ document.addEventListener('DOMContentLoaded', async () => {
          document.getElementById('paypalAddress').value = '';
          document.getElementById('cashAppAddress').value = '';
          document.getElementById('applePayIdentifier').value = '';
+         document.getElementById('govApprovedSellersList').innerHTML = '<li>Authenticate to see approved sellers.</li>'; // Clear GOV sellers list
       }
     });
 
-    // Add Product button listener
+    // Add Product button listener (for general products)
     document.getElementById('addProductBtn')?.addEventListener('click', addProduct);
 
     // Clear Fields button listener
@@ -954,6 +1086,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Save Payment Info button listener
     document.getElementById('savePaymentInfoBtn')?.addEventListener('click', savePaymentInfo);
+
+    // Add GOV Seller button listener
+    document.getElementById('addGovSellerBtn')?.addEventListener('click', addGovSeller);
 
 
     // Order Notification button listener
@@ -994,6 +1129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      document.getElementById('errorMessage').style.display = 'none';
      // Place the product database button on initial load
      document.getElementById('productList').innerHTML = '<button onclick="location.href=\'product_database.html\'" class="green-button product-database-button">📂 Product Database</button>';
+     document.getElementById('govApprovedSellersList').innerHTML = '<li>Authenticate to see approved sellers.</li>'; // Initial state for GOV sellers list
 });
 
 // --- Admin Panel Script Functions (Need Firestore Integration) ---
@@ -1113,7 +1249,7 @@ function updateAdminOrderTotals() {
   const taxWallet = total * 0.1; // Assuming a hardcoded tax rate
 
   document.getElementById("adminOrderValue").textContent = total.toFixed(2);
-  document.getElementById("adminTaxWallet").textContent = taxWallet.toFixed(2);
+  // document.getElementById("adminTaxWallet").textContent = taxWallet.toFixed(2); // This element doesn't seem to exist in the HTML
   console.warn("Admin order totals and tax wallet are calculated based on localStorage and may not be accurate with real-time data. Consider updating this logic to use Firestore and the fetched ETH price rate.");
 }
 
