@@ -757,7 +757,7 @@ async function loadPaymentInfo(walletAddress) {
 
      console.log("Attempting to load payment info for wallet:", walletAddress); // Added log
 
-     // Load payment info from the document named by the wallet address
+     // Load payment info from the document named by the connected wallet address
      const sellerPaymentInfoRef = db.collection('sellerPaymentInfo').doc(walletAddress.toLowerCase());
 
      try {
