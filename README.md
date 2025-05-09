@@ -10,6 +10,10 @@ gov market added (gov index market page with solo listings for gov vendors)
 
 support section added to gov market hub to sign up to be goverment seller for items 
 
+updated product database for gov sellers 
+
+restricted everyday sellers on gov market ( only for gov sellers)  
+
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 new update v1.02
