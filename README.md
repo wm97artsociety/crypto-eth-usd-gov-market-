@@ -23,7 +23,7 @@ rules menu button added to the marketplace
 general rules for sellers, buyers and transactions 
 
 
-
+for extra database you get set up more databases such as w1 w2 w3 and run firebase api for the newer product listings to save on fees and cost leaving around 15 dollars to maintain the marketplace 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 new update v1.01
