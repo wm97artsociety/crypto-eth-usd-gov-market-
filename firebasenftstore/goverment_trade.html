@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Government Trade - Universal Crypto Marketplace</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; line-height: 1.6; }
+    .top-bar {
+      background: #222; color: white; padding: 10px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .wallet-controls {
+      display: flex; flex-direction: column; gap: 10px; align-items: center;
+    }
+    .wallet-controls button {
+       padding: 8px 12px; border-radius: 4px; border: none;
+       cursor: pointer; width: 100%; /* Ensure consistent width */
+    }
+    .connect-btn {
+      background: #0073e6; color: white;
+    }
+    .connect-btn:hover { background: #005bb5; }
+
+      /* Style for the List Item button (visible for non-admin connected wallets) */
+      .list-item-btn {
+          background: #28a745; /* Green color */
+          color: white;
+          display: none; /* Hidden by default */
+      }
+       .list-item-btn:hover {
+          background: #218838;
+       }
+
+    /* Style for the Admin button (visible only for admin wallet) */
+    #adminBtn {
+      background: #0073e6; color: white; display: none; /* Hidden by default */
+    }
+    #adminBtn:hover { background: #005bb5; }
+
+    #contactBtn {
+      background: #f39c12; color: white;
+    }
+    #contactBtn:hover { background: #e67e22; }
+
+    /* Style for the Profile button (green) */
+      #profileBtn {
+          background: #28a745; /* Green color */
+          color: white;
+          display: none; /* Hidden by default */
+      }
+      #profileBtn:hover {
+          background: #218838; /* Darker green on hover */
+      }
+
+     /* Style for the Rules button (red) */
+     #rulesBtn {
+         background: red; /* Red color */
+         color: white; /* White text */
+     }
+      #rulesBtn:hover {
+          background: darkred; /* Darker red on hover */
+      }
+
+       /* Style for the Government Trade button (now 'List an Item') */
+       /* Changed styling to be a standard green button like Home */
+       #governmentTradeBtn {
+           background-color: #4CAF50; /* Green */
+           color: white;
+       }
+       #governmentTradeBtn:hover {
+           background-color: #45a049; /* Darker green on hover */
+       }
+
+
+       /* Green button style (used for the Home button in the header) */
+       #homeBtnHeader {
+           background-color: #4CAF50; /* Green */
+           color: white;
+       }
+       #homeBtnHeader:hover {
+           background-color: #45a049; /* Darker green on hover */
+       }
+
+
+    /* Main content area styles */
+    .main-content {
+        max-width: 960px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .main-content h2 {
+        color: #333;
+        border-bottom: 2px solid #0073e6; /* Blue border */
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .main-content section {
+        margin-bottom: 30px;
+    }
+
+    .main-content section h3 {
+        color: #555;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+
+    .main-content p {
+        margin-bottom: 15px;
+        color: #444;
+    }
+
+    /* Style for the new Government Trade buttons */
+    .gov-trade-button {
+        display: block; /* Make buttons take full width */
+        width: 100%;
+        padding: 10px 15px;
+        margin-top: 10px; /* Space above the button */
+        margin-bottom: 15px; /* Space below the button */
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+        /* Red, White, and Blue background */
+        background: linear-gradient(to right, red 33%, white 33%, white 66%, blue 66%);
+        color: black; /* Black text */
+        /* Yellow glow effect */
+        text-shadow: 0 0 5px yellow, 0 0 10px yellow, 0 0 15px yellow; /* Multiple shadows for glow */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Optional: add a subtle box shadow */
+    }
+     .gov-trade-button:hover {
+         opacity: 0.9; /* Slight opacity change on hover */
+         box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Enhance box shadow on hover */
+     }
+
+    /* Specific style for the Coming Soon button */
+    .gov-trade-button.coming-soon {
+        /* Black text with gold glow */
+        color: black;
+        text-shadow: 0 0 5px gold, 0 0 10px gold, 0 0 15px gold;
+        /* Keep the red, white, and blue background */
+        background: linear-gradient(to right, red 33%, white 33%, white 66%, blue 66%);
+        cursor: default; /* Indicate it's not clickable */
+    }
+     .gov-trade-button.coming-soon:hover {
+         opacity: 1; /* No opacity change on hover */
+         box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* No box shadow change on hover */
+     }
+
+
+    footer { text-align: center; padding: 20px;
+	background: #222; color: white; margin-top: 50px; }
+
+    /* Responsive adjustments for wallet controls */
+    @media (max-width: 400px) {
+        .wallet-controls {
+            align-items: center; /* Center buttons when stacked on small screens */
+        }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <h1>GOV World Trade</h1>
+    <p>with barter, crypto, cash or assets</p>
+  </div>
+  <div class="wallet-controls">
+    <span id="walletDisplay">Wallet: —</span>
+    <button id="connectBtn" class="connect-btn">🔌 Connect Wallet</button>
+    <button id="listItemBtn" class="list-item-btn" onclick="window.location.href = 'upanel.html';">📦 List an Item</button>
+    <button id="adminBtn" onclick="window.location.href = 'admin.html';">🔑 Admin Panel</button>
+    <button id="profileBtn" onclick="window.location.href = 'user_profile.html';">👤 Profile</button>
+    <button id="governmentTradeBtn" onclick="window.location.href='upanel.html';">📦 List an Item</button>
+    <button id="contactBtn" onclick="window.location.href='support.html';">Support & Contact</button>
+    <button id="rulesBtn" onclick="window.location.href='rules.html';">📜 Rules</button>
+    <button id="homeBtnHeader" onclick="location.href='index.html'">🏠 Home</button>
+  </div>
+</div>
+
+<div class="main-content">
+    <h2>Welcome to the Government Trade Section</h2>
+
+    <section>
+      <h3>Overview</h3>
+      <p>This section is dedicated to facilitating trade between government entities and approved vendors on the Universal Crypto Marketplace. All transactions and listings here are subject to specific regulations and verification processes.</p>
+    </section>
+
+     <section>
+         <h3>For Government Buyers</h3>
+         <p>Browse listings from verified suppliers. All purchases require official authorization and compliance with procurement guidelines.</p>
+         <p><strong>Requirement: Government buyers must operate as a legally registered entity, such as an LLC, to make purchases in this section.</strong></p>
+         <button class="gov-trade-button" onclick="window.location.href='government_buyer_dashboard.html';">Government Buyer Dashboard</button>
+     </section>
+
+     <section>
+         <h3>For Approved Vendors</h3>
+         <p>List products and services available for government purchase. Ensure all listings meet relevant standards and certifications. Verification of vendor status is required.</p>
+         <p><strong>Requirement: Vendors must operate as a legally registered entity, such as an an LLC, to sell in this section.</strong></p>
+         <button class="gov-trade-button" onclick="window.location.href='vendor_listing_submission.html';">Vendor Listing Submission</button>
+     </section>
+
+     <section>
+         <h3>Compliance and Regulations</h3>
+         <p>All activities in this section must adhere to applicable government regulations, export controls, and compliance requirements. Please consult the relevant documentation and legal counsel.</p>
+         <p><strong>Transaction Requirement: Sellers are responsible for understanding and fulfilling all tax obligations related to sales made to government entities under applicable U.S. laws, including those in effect as of 2025. This may involve specific reporting requirements (e.g., Form 1099-NEC) depending on the transaction details and total value. Consult with a tax professional for guidance specific to your situation.</strong></p>
+         <button class="gov-trade-button" onclick="window.location.href='compliance_documentation.html';">Compliance Documentation</button>
+     </section>
+
+    <section>
+        <h3>Become a Verified Government Vendor</h3>
+        <p>If you have reviewed the requirements and completed the necessary steps outlined in the sections above, you can now proceed with the verification process to become an approved vendor for Government Trade.</p>
+        <p>Click the button below to contact the administration and begin the final steps for listing items in this section.</p>
+        <button class="gov-trade-button" onclick="window.location.href='support.html';">Support to Admin Panel to Sell to GOV</button>
+    </section>
+    <section>
+        <h3>GOV Market</h3>
+        <p>The Government Trade is currently under development. This will provide enhanced security, transparency, and compliance features for government transactions.</p>
+        <p>Stay tuned for updates on the launch of the GOV Market.</p>
+        <button class="gov-trade-button coming-soon">GOV Market (Coming Soon)</button>
+    </section>
+    </div>
+
+<footer>
+  &copy; 2025 Universal Crypto Marketplace. All Rights Reserved.
+</footer>
+
+<script>
+// Firebase Configuration (REPLACE WITH YOUR ACTUAL CONFIG)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY", // Replace with your API Key
+  authDomain: "YOUR_AUTH_DOMAIN", // Replace with your Auth Domain
+  projectId: "YOUR_PROJECT_ID", // Replace with your Project ID
+  storageBucket: "YOUR_STORAGE_BUCKET", // Replace with your Storage Bucket
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your Messaging Sender ID
+  appId: "YOUR_APP_ID" // Replace with your App ID
+};
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+} else {
+    firebase.app(); // if already initialized, use that app
+}
+
+// Get a reference to the Firestore database
+const db = firebase.firestore();
+
+
+let userAccount = null;
+let provider;
+let signer;
+
+// ⚡ ADMIN WALLET ADDRESS (Needed for button display logic)
+// REPLACE WITH YOUR ACTUAL ADMIN WALLET ADDRESS
+const ADMIN_WALLET = "0x99fd24a80f98607faf53cc24dda0af9bb967bc8b"; // Replace with your actual admin wallet address
+
+
+async function connectWallet() {
+  if (window.ethereum) {
+    try {
+      // Request accounts - this will prompt the user if not already connected
+      provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      const accounts = await provider.send("eth_requestAccounts", []); // Use send for explicit request
+      signer = provider.getSigner();
+      if (accounts.length > 0) {
+          userAccount = accounts[0]; // Update userAccount variable
+          updateWalletDisplay(userAccount);
+          localStorage.setItem('walletAddress', userAccount); // Store connected wallet
+           // Add event listeners for account/chain changes after successful connection
+           window.ethereum.on('accountsChanged', handleAccountsChanged);
+           window.ethereum.on('chainChanged', handleChainChanged);
+      } else {
+           console.log("No accounts returned after request.");
+           disconnectWallet(); // Treat as disconnected if no accounts found
+           alert('Please select an account in your wallet.');
+      }
+    } catch (error) {
+        console.error("Error connecting wallet:", error);
+        alert('Error connecting wallet: ' + error.message);
+        disconnectWallet(); // Ensure UI is clean on error
+    }
+  } else {
+    alert('Please install MetaMask or an Ethereum-compatible wallet (like OKX Wallet)!');
+  }
+}
+
+async function updateWalletDisplay(account) {
+  userAccount = account;
+  const adminBtn = document.getElementById('adminBtn');
+  const listItemBtn = document.getElementById('listItemBtn');
+  const profileBtn = document.getElementById('profileBtn'); // Get the Profile button
+  const connectBtn = document.getElementById('connectBtn');
+  const walletDisplay = document.getElementById('walletDisplay');
+  // Contact, Rules, Home buttons are always visible
+  // Government Trade button (now 'List an Item') is always visible on this page
+
+
+    if (userAccount) {
+      const short = userAccount.slice(0, 6) + "..." + userAccount.slice(-4);
+      walletDisplay.textContent = `Wallet: ${short}`;
+      connectBtn.textContent = '✅ Connected';
+
+      // Always show the Profile button when any wallet is connected
+      profileBtn.style.display = 'inline-block';
+      /*
+      // Commented out the conditional display for the 'List an Item' button on THIS page
+      // as it's now a static navigation button back to the index.
+      // The logic for showing Admin/List Item buttons based on wallet type
+      // is primarily for the index page header.
+      // Logic to show/hide List Item and Admin buttons based on wallet type
+      if (userAccount.toLowerCase() === ADMIN_WALLET.toLowerCase()) {
+        adminBtn.style.display = 'inline-block';
+        listItemBtn.style.display = 'none';
+      } else {
+        adminBtn.style.display = 'none';
+        listItemBtn.style.display = 'inline-block';
+      }
+      */
+      // The Admin and List Item buttons in the header are now always hidden on this page
+      // as the 'List an Item' button serves as the link back to the main marketplace.
+      adminBtn.style.display = 'none';
+      listItemBtn.style.display = 'none';
+
+
+    } else {
+        // Wallet is disconnected
+        walletDisplay.textContent = 'Wallet: —';
+        connectBtn.textContent = '🔌 Connect Wallet';
+        // Hide conditional buttons when disconnected
+        adminBtn.style.display = 'none';
+        listItemBtn.style.display = 'none';
+        profileBtn.style.display = 'none'; // Hide Profile button when disconnected
+        // Contact, Rules, Home buttons remain visible
+    }
+  }
+
+// Handle accounts changed event
+function handleAccountsChanged(accounts) {
+    console.log('Accounts changed:', accounts);
+    if (accounts.length === 0) {
+        // Wallet locked or no accounts connected
+        console.log('Please connect to MetaMask.');
+        disconnectWallet(); // Treat as disconnected in the UI
+    } else if (accounts[0].toLowerCase() !== userAccount?.toLowerCase()) {
+        // Account changed - update display and button visibility
+        console.log('Account changed to:', accounts[0]);
+        userAccount = accounts[0]; // Update userAccount variable
+        updateWalletDisplay(userAccount); // Update UI and button visibility based on new account
+        localStorage.setItem('walletAddress', userAccount); // Update stored wallet
+        // Optionally reload page or refresh data based on new account
+         // window.location.reload(); // Simple way to refresh data for the new account
+    }
+}
+
+// Handle chain changed event
+function handleChainChanged(chainId) {
+  // We should reload the page or re-initialize the provider if the network changes
+  console.log('Chain changed to:', chainId);
+  // A simple approach is to prompt the user to reload the page
+  alert('Ethereum network changed. Please reload the page.');
+   window.location.reload(); // Force a reload
+}
+
+
+function disconnectWallet() {
+  userAccount = null;
+  provider = null; // Clear provider and signer
+  signer = null;
+  if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum.removeListener('chainChanged', handleChainChanged);
+    }
+  localStorage.removeItem('walletAddress'); // Clear stored wallet
+  updateWalletDisplay(null); // Update UI (will hide conditional buttons)
+  console.log("Wallet display disconnected.");
+  // Note: This function only updates the UI. The wallet connection itself is managed by the browser extension.
+}
+
+
+document.getElementById('connectBtn').addEventListener('click', async () => {
+  if (userAccount) {
+      // If a wallet is already connected in our UI, clicking the button disconnects the UI display
+      // This provides a simple toggle functionality for the Connect/Disconnect button text
+      disconnectWallet();
+  } else {
+    // If no wallet is connected in our UI, clicking the button initiates connection
+    await connectWallet();
+  }
+});
+
+
+window.addEventListener('load', async () => {
+  // --- Wallet Auto-Connection Logic ---
+  // This block attempts to automatically connect the wallet if it was previously connected
+  // and the browser extension is available and unlocked.
+  const storedWallet = localStorage.getItem('walletAddress'); // Check if a wallet address was stored from a previous session
+  if (storedWallet && typeof window.ethereum !== 'undefined') { // Check if a wallet was stored AND the Ethereum provider is available
+    try {
+      provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      // Use eth_accounts to check for already connected accounts without prompting the user
+      const accounts = await provider.send("eth_accounts", []); // This is the key for non-prompting check
+
+      if (accounts.length > 0 && accounts[0].toLowerCase() === storedWallet.toLowerCase()) {
+          // If accounts are found and the first one matches the stored address, assume connected
+          signer = provider.getSigner();
+          userAccount = accounts[0]; // Update userAccount variable
+          updateWalletDisplay(userAccount); // Update UI and button visibility
+          console.log("Auto-connected to stored wallet:", userAccount);
+          // Add listeners for existing connections on load
+           window.ethereum.on('accountsChanged', handleAccountsChanged);
+           window.ethereum.on('chainChanged', handleChainChanged);
+      } else {
+          // Stored wallet not found, or wallet is locked/disconnected from this site
+          console.log("Stored wallet not found or not connected to this site.");
+          localStorage.removeItem('walletAddress'); // Clear stored wallet as it's no longer valid
+          updateWalletDisplay(null); // Ensure UI is correct (disconnected state)
+      }
+    } catch (error) {
+       console.error("Error during auto-connection check:", error);
+       localStorage.removeItem('walletAddress'); // Clear stored wallet on error
+       updateWalletDisplay(null); // Ensure UI is correct on error
+    }
+  } else {
+      // No stored wallet or window.ethereum is not available
+      updateWalletDisplay(null); // Ensure UI is correct (disconnected state)
+      console.log("No stored wallet or Ethereum provider not found.");
+  }
+  // --- End of Wallet Auto-Connection Logic ---
+
+  // No product display needed on this page
+});
+
+</script>
+
+</body>
+</html>

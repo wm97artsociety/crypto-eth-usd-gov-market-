@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Marketplace Rules - Universal Crypto Marketplace</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    /* Basic styles consistent with other pages */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; line-height: 1.6; }
+    .top-bar {
+      background: #222; color: white; padding: 10px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .wallet-controls {
+      display: flex; flex-direction: column; gap: 10px; align-items: center;
+    }
+    .connect-btn {
+      background: #0073e6; color: white; border: none;
+      padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%;
+    }
+    .connect-btn:hover { background: #005bb5; }
+
+    /* Style for the dynamic List/Admin button */
+    #dynamicPanelBtn {
+        background: #28a745; /* Green color, similar to List Item button */
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        display: none; /* Hidden by default until wallet is connected */
+    }
+     #dynamicPanelBtn:hover {
+         background: #218838;
+     }
+
+    #contactBtn {
+      background: #f39c12; color: white; padding: 8px 12px;
+      border-radius: 4px; cursor: pointer; width: 100%;
+    }
+    #contactBtn:hover { background: #e67e22; }
+
+    /* Style for the Profile button (now green) */
+      #profileBtn {
+          background: #28a745; /* Green color */
+          color: white;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          width: 100%;
+          display: none; /* Hidden by default */
+      }
+      #profileBtn:hover {
+          background: #218838; /* Darker green on hover */
+      }
+
+     /* Style for the Rules button (red) */
+     #rulesBtn {
+         background: red; /* Red color */
+         color: white; /* White text */
+         border: none;
+         padding: 8px 12px;
+         border-radius: 4px;
+         cursor: pointer;
+         width: 100%;
+     }
+      #rulesBtn:hover {
+          background: darkred; /* Darker red on hover */
+      }
+
+     /* Style for the new Home button (green) */
+     .home-btn {
+         background-color: #4CAF50; /* Green */
+         color: white;
+         padding: 8px 12px; /* Consistent padding with other header buttons */
+         border: none;
+         border-radius: 4px; /* Consistent border-radius */
+         cursor: pointer;
+         width: 100%; /* Consistent width */
+     }
+      .home-btn:hover {
+          background-color: #45a049; /* Darker green on hover */
+      }
+
+
+    /* Main content area styles */
+    .main-content {
+        max-width: 960px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .main-content h2 {
+        color: #333;
+        border-bottom: 2px solid #0073e6; /* Blue border */
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .main-content section {
+        margin-bottom: 30px;
+    }
+
+    .main-content section h3 {
+        color: #555;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+
+    .main-content ul {
+        list-style: disc;
+        margin-left: 20px;
+    }
+
+    .main-content li {
+        margin-bottom: 8px;
+        color: #444;
+    }
+
+    footer { text-align: center; padding: 20px;
+	background: #222; color: white; margin-top: 50px; }
+
+    /* Responsive adjustments for wallet controls */
+    @media (max-width: 400px) {
+        .wallet-controls {
+            align-items: center; /* Center buttons when stacked on small screens */
+        }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <h1>🌎 Universal Crypto Marketplace</h1>
+    <p>Buy items using ETH!</p>
+  </div>
+  <div class="wallet-controls">
+    <span id="walletDisplay">Wallet: —</span>
+    <button id="connectBtn" class="connect-btn">🔌 Connect Wallet</button>
+    <button id="dynamicPanelBtn"></button>
+    <button id="profileBtn" onclick="window.location.href = 'user_profile.html';">👤 Profile</button>
+    <button id="contactBtn" onclick="window.location.href='support.html';">Support & Contact</button>
+    <button id="rulesBtn" onclick="window.location.href='rules.html';">📜 Rules</button>
+    <button class="home-btn" onclick="window.location.href='index.html';">🏠 Home</button>
+  </div>
+</div>
+
+<div class="main-content">
+    <h2>📜 Marketplace Rules</h2>
+
+    <section>
+      <h3>🔐 General Guidelines</h3>
+      <ul>
+        <li>All users must connect a crypto wallet to transact.</li>
+        <li>Transactions are final—ensure accuracy before sending crypto.</li>
+        <li>Fraudulent listings or payments will result in immediate ban.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>🛒 Buying Policies</h3>
+      <ul>
+        <li>Ensure the item description, price, and seller reputation before purchase.</li>
+        <li>Crypto transactions are irreversible—use caution and due diligence.</li>
+        <li>If a product isn’t delivered, report the seller via the support panel.</li>
+        <li>Buyers must not pressure sellers to transact off-platform.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>📦 Selling Policies</h3>
+      <ul>
+        <li>Sellers must provide accurate descriptions, photos, and pricing.</li>
+        <li>Digital and physical goods must be delivered promptly after payment.</li>
+        <li>No listing of illegal, counterfeit, or banned goods.</li>
+        <li>Sellers are responsible for tax obligations based on their region (see Tax Page).</li>
+        <li>All items must be listed using your registered profile and wallet.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>🚫 Prohibited Items</h3>
+      <ul>
+        <li>Illegal items, substances, or services.</li>
+        <li>Weapons, explosives, or hazardous materials.</li>
+        <li>Counterfeit currency or unauthorized financial services.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>📬 Support and Disputes</h3>
+      <ul>
+        <li>Use the support tab for reporting issues with transactions or users.</li>
+        <li>Disputes are reviewed case-by-case by marketplace moderators.</li>
+        <li>Persistent abuse of the system leads to blacklisting of the wallet address.</li>
+      </ul>
+    </section>
+</div>
+
+<footer>
+  &copy; 2025 Universal Crypto Marketplace. All Rights Reserved.
+</footer>
+
+<script>
+  // Firebase Configuration (REPLACE WITH YOUR ACTUAL CONFIG)
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY", // Replace with your API Key
+    authDomain: "YOUR_AUTH_DOMAIN", // Replace with your Auth Domain
+    projectId: "YOUR_PROJECT_ID", // Replace with your Project ID
+    storageBucket: "YOUR_STORAGE_BUCKET", // Replace with your Storage Bucket
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your Messaging Sender ID
+    appId: "YOUR_APP_ID" // Replace with your App ID
+  };
+
+  // Initialize Firebase
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+
+  let userAccount = null;
+  let provider;
+  let signer;
+
+  // ⚡ ADMIN WALLET ADDRESS (Needed for button display logic)
+  // REPLACE WITH YOUR ACTUAL ADMIN WALLET ADDRESS
+  const ADMIN_WALLET = "0x99fd24a80f98607faf53cc24dda0af9bb967bc8b";
+
+
+  async function connectWallet() {
+    if (window.ethereum) {
+      try {
+        provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        const accounts = await provider.listAccounts();
+        if (accounts.length > 0) {
+            updateWalletDisplay(accounts[0]);
+            localStorage.setItem('walletAddress', accounts[0]); // Store connected wallet
+             // Add event listeners for account/chain changes after successful connection
+             window.ethereum.on('accountsChanged', handleAccountsChanged);
+             window.ethereum.on('chainChanged', handleChainChanged);
+        } else {
+            console.log("No accounts returned after request.");
+            disconnectWallet(); // Treat as disconnected if no accounts found
+            alert('Please select an account in your wallet.');
+        }
+      } catch (error) {
+          console.error("Error connecting wallet:", error);
+          alert('Error connecting wallet: ' + error.message);
+          disconnectWallet(); // Ensure UI is clean on error
+      }
+    } else {
+      alert('Please install MetaMask or an Ethereum-compatible wallet (like OKX Wallet)!');
+    }
+  }
+
+  async function updateWalletDisplay(account) {
+    userAccount = account;
+    const walletDisplay = document.getElementById('walletDisplay');
+    const connectBtn = document.getElementById('connectBtn');
+    const dynamicPanelBtn = document.getElementById('dynamicPanelBtn');
+    const profileBtn = document.getElementById('profileBtn');
+    // const rulesBtn = document.getElementById('rulesBtn'); // No need to get rulesBtn here as its visibility is static
+    // const homeBtn = document.querySelector('.home-btn'); // No need to get homeBtn here as its visibility is static
+
+
+    if (userAccount) {
+      const short = userAccount.slice(0, 6) + "..." + userAccount.slice(-4);
+      walletDisplay.textContent = `Wallet: ${short}`;
+      connectBtn.textContent = '✅ Connected';
+
+      // Show the dynamic button
+      dynamicPanelBtn.style.display = 'inline-block';
+      // Always show the Profile button when any wallet is connected
+      profileBtn.style.display = 'inline-block';
+      // Rules and Home buttons are always visible
+
+
+      // Check if the connected wallet is the admin wallet
+      if (userAccount.toLowerCase() === ADMIN_WALLET.toLowerCase()) {
+        // If admin, set button text and link to Admin Panel
+        dynamicPanelBtn.textContent = '🔑 Admin Panel';
+        dynamicPanelBtn.onclick = () => { window.location.href = 'admin.html'; };
+      } else {
+        // If not admin, set button text and link to List an Item (Seller Panel)
+        dynamicPanelBtn.textContent = '📦 List an Item';
+        dynamicPanelBtn.onclick = () => { window.location.href = 'upanel.html'; };
+      }
+
+    } else {
+      // Wallet is disconnected
+      walletDisplay.textContent = 'Wallet: —';
+      connectBtn.textContent = '🔌 Connect Wallet';
+      // Hide buttons when disconnected
+      dynamicPanelBtn.style.display = 'none';
+      dynamicPanelBtn.textContent = ''; // Clear text
+      dynamicPanelBtn.onclick = null; // Remove click handler
+      profileBtn.style.display = 'none'; // Hide Profile button when disconnected
+      // Rules and Home buttons remain visible
+    }
+  }
+
+  function disconnectWallet() {
+    userAccount = null;
+    provider = null; // Clear provider and signer
+    signer = null;
+    if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum.removeListener('chainChanged', handleChainChanged);
+    }
+    localStorage.removeItem('walletAddress'); // Clear stored wallet
+    updateWalletDisplay(null); // Update UI (will hide dynamic button and profile button)
+    console.log("Wallet display disconnected.");
+    // Note: This function only updates the UI. The wallet connection itself is managed by the browser extension.
+  }
+
+    // Handle accounts changed event
+    function handleAccountsChanged(accounts) {
+        console.log('Accounts changed:', accounts);
+        if (accounts.length === 0) {
+            // Wallet locked or no accounts connected
+            console.log('Please connect to MetaMask.');
+            disconnectWallet(); // Treat as disconnected in the UI
+        } else if (accounts[0].toLowerCase() !== userAccount?.toLowerCase()) {
+            // Account changed - update display and button
+            console.log('Account changed to:', accounts[0]);
+            updateWalletDisplay(accounts[0]); // Update UI and button based on new account
+            localStorage.setItem('walletAddress', accounts[0]); // Update stored wallet
+            // Optionally reload page or refresh data based on new account
+             // window.location.reload(); // Simple way to refresh data for the new account
+        }
+    }
+
+    // Handle chain changed event
+    function handleChainChanged(chainId) {
+      console.log('Chain changed to:', chainId);
+      // A simple approach is to prompt the user to reload the page
+      alert('Ethereum network changed. Please reload the page.');
+       window.location.reload(); // Force a reload
+    }
+
+
+  document.getElementById('connectBtn').addEventListener('click', async () => {
+    if (userAccount) {
+        // If a wallet is already connected in our UI, clicking the button disconnects the UI display
+        // This provides a simple toggle functionality for the Connect/Disconnect button text
+        disconnectWallet();
+    } else {
+      // If no wallet is connected in our UI, clicking the button initiates connection
+      await connectWallet();
+    }
+  });
+
+
+  window.addEventListener('load', async () => {
+    // No product display needed on the rules page
+    // Attempt to reconnect wallet automatically on load if window.ethereum is available
+    if (typeof window.ethereum !== 'undefined') {
+        // Check if accounts are already connected
+        try {
+             provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+             const accounts = await provider.listAccounts(); // Check if wallet is still connected
+             if (accounts.length > 0) {
+                 // If accounts are found, treat as already connected
+                 updateWalletDisplay(accounts[0]); // Update UI and button
+                 // Add listeners for existing connections on load
+                 window.ethereum.on('accountsChanged', handleAccountsChanged);
+                 window.ethereum.on('chainChanged', handleChainChanged);
+             } else {
+                 // No accounts found, wallet is installed but not connected
+                 console.log("Wallet installed but no accounts connected.");
+                 updateWalletDisplay(null); // Ensure UI is correct
+             }
+        } catch (error) {
+            console.error("Error checking initial wallet connection:", error);
+            updateWalletDisplay(null); // Ensure UI is correct on error
+        }
+    } else {
+        // Wallet not installed
+        updateWalletDisplay(null); // Ensure UI is correct
+    }
+  });
+
+</script>
+
+</body>
+</html>
