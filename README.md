@@ -7,6 +7,10 @@ rule section for gov market needs to be updated for gov sellers
 
 new update v1.03
 -
+
+purchase history updated with review center for reviews of undelivered orders (firebase api required for product database)
+
+
 main index home page listing viewer updated 25 main listings on each page with automatic new pages when listings are made 
 
 gov market added (gov index market page with solo listings for gov vendors)
