@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Government Trade - Universal Crypto Marketplace</title>
+  <title>Government Trade Management - Universal Crypto Marketplace</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
   <style>
+    /* Basic reset and body styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; background: #f4f4f4; line-height: 1.6; }
     .top-bar {
@@ -27,66 +28,20 @@
     }
     .connect-btn:hover { background: #005bb5; }
 
-      /* Style for the List Item button (visible for non-admin connected wallets) */
-      .list-item-btn {
-          background: #28a745; /* Green color */
-          color: white;
-          display: none; /* Hidden by default */
-      }
-       .list-item-btn:hover {
-          background: #218838;
-       }
-
-    /* Style for the Admin button (visible only for admin wallet) */
-    #adminBtn {
-      background: #0073e6; color: white; display: none; /* Hidden by default */
-    }
+    /* Specific button styles (copied from existing files for consistency) */
+    /* Note: listItemBtn and adminBtn in the header are hidden on this page */
+    .list-item-btn { background: #28a745; color: white; display: none; }
+    .list-item-btn:hover { background: #218838; }
+    #adminBtn { background: #0073e6; color: white; display: none; }
     #adminBtn:hover { background: #005bb5; }
-
-    #contactBtn {
-      background: #f39c12; color: white;
-    }
+    #contactBtn { background: #f39c12; color: white; }
     #contactBtn:hover { background: #e67e22; }
-
-    /* Style for the Profile button (green) */
-      #profileBtn {
-          background: #28a745; /* Green color */
-          color: white;
-          display: none; /* Hidden by default */
-      }
-      #profileBtn:hover {
-          background: #218838; /* Darker green on hover */
-      }
-
-     /* Style for the Rules button (red) */
-     #rulesBtn {
-         background: red; /* Red color */
-         color: white; /* White text */
-     }
-      #rulesBtn:hover {
-          background: darkred; /* Darker red on hover */
-      }
-
-       /* Style for the Government Trade button (now 'List an Item') */
-       /* Changed styling to be a standard green button like Home */
-       #governmentTradeBtn {
-           background-color: #4CAF50; /* Green */
-           color: white;
-       }
-       #governmentTradeBtn:hover {
-           background-color: #45a049; /* Darker green on hover */
-       }
-
-
-       /* Green button style (used for the Home button in the header) */
-       #homeBtnHeader {
-           background-color: #4CAF50; /* Green */
-           color: white;
-       }
-       #homeBtnHeader:hover {
-           background-color: #45a049; /* Darker green on hover */
-       }
-
+    #profileBtn { background: #28a745; color: white; display: none; }
+    #profileBtn:hover { background: #218838; }
+    #rulesBtn { background: red; color: white; }
+    #rulesBtn:hover { background: darkred; }
+    #homeBtnHeader { background-color: #4CAF50; color: white; }
+    #homeBtnHeader:hover { background-color: #45a049; }
 
     /* Main content area styles */
     .main-content {
@@ -121,7 +76,7 @@
         color: #444;
     }
 
-    /* Style for the new Government Trade buttons */
+    /* Style for the Government Trade related buttons */
     .gov-trade-button {
         display: block; /* Make buttons take full width */
         width: 100%;
@@ -146,20 +101,6 @@
          box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Enhance box shadow on hover */
      }
 
-    /* Specific style for the Coming Soon button */
-    .gov-trade-button.coming-soon {
-        /* Black text with gold glow */
-        color: black;
-        text-shadow: 0 0 5px gold, 0 0 10px gold, 0 0 15px gold;
-        /* Keep the red, white, and blue background */
-        background: linear-gradient(to right, red 33%, white 33%, white 66%, blue 66%);
-        cursor: default; /* Indicate it's not clickable */
-    }
-     .gov-trade-button.coming-soon:hover {
-         opacity: 1; /* No opacity change on hover */
-         box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* No box shadow change on hover */
-     }
-
 
     footer { text-align: center; padding: 20px;
 	background: #222; color: white; margin-top: 50px; }
@@ -176,8 +117,8 @@
 
 <div class="top-bar">
   <div>
-    <h1>GOV World Trade</h1>
-    <p>with barter, crypto, cash or assets</p>
+    <h1>GOV World Trade Management</h1>
+    <p>Manage your government trade activities</p>
   </div>
   <div class="wallet-controls">
     <span id="walletDisplay">Wallet: —</span>
@@ -185,7 +126,6 @@
     <button id="listItemBtn" class="list-item-btn" onclick="window.location.href = 'upanel.html';">📦 List an Item</button>
     <button id="adminBtn" onclick="window.location.href = 'admin.html';">🔑 Admin Panel</button>
     <button id="profileBtn" onclick="window.location.href = 'user_profile.html';">👤 Profile</button>
-    <button id="governmentTradeBtn" onclick="window.location.href='upanel.html';">📦 List an Item</button>
     <button id="contactBtn" onclick="window.location.href='support.html';">Support & Contact</button>
     <button id="rulesBtn" onclick="window.location.href='rules.html';">📜 Rules</button>
     <button id="homeBtnHeader" onclick="location.href='index.html'">🏠 Home</button>
@@ -193,45 +133,45 @@
 </div>
 
 <div class="main-content">
-    <h2>Welcome to the Government Trade Section</h2>
+    <h2>Government Trade Management Hub</h2>
 
     <section>
       <h3>Overview</h3>
-      <p>This section is dedicated to facilitating trade between government entities and approved vendors on the Universal Crypto Marketplace. All transactions and listings here are subject to specific regulations and verification processes.</p>
+      <p>This section is your hub for managing government trade activities on the Universal Crypto Marketplace. Here you can access resources for government buyers, submit vendor listings, review compliance documentation, and initiate the vendor verification process.</p>
+      <p>To browse available government listings and manage orders, please visit the dedicated GOV Market page.</p>
     </section>
 
      <section>
          <h3>For Government Buyers</h3>
-         <p>Browse listings from verified suppliers. All purchases require official authorization and compliance with procurement guidelines.</p>
+         <p>Access your dashboard to manage official government purchases. All transactions require proper authorization and compliance.</p>
          <p><strong>Requirement: Government buyers must operate as a legally registered entity, such as an LLC, to make purchases in this section.</strong></p>
-         <button class="gov-trade-button" onclick="window.location.href='government_buyer_dashboard.html';">Government Buyer Dashboard</button>
+         <button class="gov-trade-button" onclick="window.location.href='support.html';">Government Buyer Dashboard</button>
      </section>
 
      <section>
          <h3>For Approved Vendors</h3>
-         <p>List products and services available for government purchase. Ensure all listings meet relevant standards and certifications. Verification of vendor status is required.</p>
+         <p>Submit and manage your listings for government purchase. Ensure compliance with all relevant standards and certifications. Vendor verification is mandatory.</p>
          <p><strong>Requirement: Vendors must operate as a legally registered entity, such as an an LLC, to sell in this section.</strong></p>
-         <button class="gov-trade-button" onclick="window.location.href='vendor_listing_submission.html';">Vendor Listing Submission</button>
+         <button class="gov-trade-button" onclick="window.location.href='support.html';">Vendor Listing Submission</button>
      </section>
 
      <section>
          <h3>Compliance and Regulations</h3>
-         <p>All activities in this section must adhere to applicable government regulations, export controls, and compliance requirements. Please consult the relevant documentation and legal counsel.</p>
+         <p>Review applicable government regulations, export controls, and compliance requirements. It is crucial to adhere to all guidelines for transactions in this section.</p>
          <p><strong>Transaction Requirement: Sellers are responsible for understanding and fulfilling all tax obligations related to sales made to government entities under applicable U.S. laws, including those in effect as of 2025. This may involve specific reporting requirements (e.g., Form 1099-NEC) depending on the transaction details and total value. Consult with a tax professional for guidance specific to your situation.</strong></p>
-         <button class="gov-trade-button" onclick="window.location.href='compliance_documentation.html';">Compliance Documentation</button>
+         <button class="gov-trade-button" onclick="window.location.href='support.html';">Compliance Documentation</button>
      </section>
 
     <section>
         <h3>Become a Verified Government Vendor</h3>
-        <p>If you have reviewed the requirements and completed the necessary steps outlined in the sections above, you can now proceed with the verification process to become an approved vendor for Government Trade.</p>
-        <p>Click the button below to contact the administration and begin the final steps for listing items in this section.</p>
+        <p>If you meet the requirements and are ready to list items for government trade, initiate the verification process here.</p>
+        <p>Click the button below to contact the administration and begin the final steps for becoming an approved government vendor.</p>
         <button class="gov-trade-button" onclick="window.location.href='support.html';">Support to Admin Panel to Sell to GOV</button>
     </section>
-    <section>
-        <h3>GOV Market</h3>
-        <p>The Government Trade is currently under development. This will provide enhanced security, transparency, and compliance features for government transactions.</p>
-        <p>Stay tuned for updates on the launch of the GOV Market.</p>
-        <button class="gov-trade-button coming-soon">GOV Market (Coming Soon)</button>
+     <section>
+        <h3>Browse GOV Market Listings</h3>
+        <p>Click the button below to view the actual listings available for government trade and manage orders.</p>
+        <button class="gov-trade-button" onclick="window.location.href='gov_market_index.html';">Visit GOV Market</button>
     </section>
     </div>
 
@@ -246,7 +186,7 @@ const firebaseConfig = {
   authDomain: "YOUR_AUTH_DOMAIN", // Replace with your Auth Domain
   projectId: "YOUR_PROJECT_ID", // Replace with your Project ID
   storageBucket: "YOUR_STORAGE_BUCKET", // Replace with your Storage Bucket
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your Messaging Sender ID
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your Messaging Sender Id
   appId: "YOUR_APP_ID" // Replace with your App ID
 };
 
@@ -267,7 +207,7 @@ let signer;
 
 // ⚡ ADMIN WALLET ADDRESS (Needed for button display logic)
 // REPLACE WITH YOUR ACTUAL ADMIN WALLET ADDRESS
-const ADMIN_WALLET = "0x99fd24a80f98607faf53cc24dda0af9bb967bc8b"; // Replace with your actual admin wallet address
+const ADMIN_WALLET = "0x99fd24a80f98607faf53cc24dda0af9bb967bc8b"; // Replace with your actual admin wallet
 
 
 async function connectWallet() {
@@ -421,11 +361,9 @@ window.addEventListener('load', async () => {
           userAccount = accounts[0]; // Update userAccount variable
           updateWalletDisplay(userAccount); // Update UI and button visibility
           console.log("Auto-connected to stored wallet:", userAccount);
-          // Add listeners for existing connections on load
            window.ethereum.on('accountsChanged', handleAccountsChanged);
            window.ethereum.on('chainChanged', handleChainChanged);
       } else {
-          // Stored wallet not found, or wallet is locked/disconnected from this site
           console.log("Stored wallet not found or not connected to this site.");
           localStorage.removeItem('walletAddress'); // Clear stored wallet as it's no longer valid
           updateWalletDisplay(null); // Ensure UI is correct (disconnected state)
