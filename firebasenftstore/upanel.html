@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔑 Seller Panel</title>
+  <title>🔑 Seller / Buyer Panel</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
@@ -171,7 +171,7 @@
             display: none; /* Hidden by default */
         }
 
-        /* Styles for the Review Section */
+        /* Styles for the Review Section (Seller) */
         .review-section {
             margin-top: 20px;
             padding-top: 15px;
@@ -248,23 +248,48 @@
             color: #444;
             font-size: 0.9em;
         }
-         .no-reviews-message {
+         .no-data-message { /* Reused class for consistency */
              font-style: italic;
              color: #777;
          }
 
+        /* Styles for Buyer Panel Section */
+        .buyer-panel-section {
+             margin-top: 20px;
+             padding-top: 15px;
+             border-top: 1px solid #ddd;
+        }
+         .buyer-panel-section h3 {
+             border-bottom: 2px solid #0073e6; /* Blue border for buyer section */
+             padding-bottom: 10px;
+             margin-bottom: 15px;
+         }
+         .buyer-panel-section .embedded-list-item .item-details button {
+             width: auto; /* Allow button to size based on content */
+             padding: 5px 10px;
+             font-size: 0.9em;
+             margin-top: 5px;
+             background-color: #f39c12; /* Orange for review button */
+             color: white;
+             border: none;
+             border-radius: 4px;
+             cursor: pointer;
+         }
+          .buyer-panel-section .embedded-list-item .item-details button:hover {
+              background-color: #e67e22; /* Darker orange on hover */
+          }
 
   </style>
 </head>
 <body>
   <div style="display: flex; justify-content: space-between; align-items: center;">
-    <h1 style="margin: 0;">🔑 Seller Panel</h1>
+    <h1 style="margin: 0;">🔑 Seller / Buyer Panel</h1>
     <button onclick="location.href='index.html'" class="green-button">🏠 Home</button>
   </div>
 
   <div class="box">
     <h2>🌐 Connect Your Wallet</h2>
-    <p>Connect your wallet (e.g., MetaMask, OKX Wallet) to access your seller dashboard.</p>
+    <p>Connect your wallet (e.g., MetaMask, OKX Wallet) to access your dashboard.</p>
     <button id="connectWalletBtn" class="green-button">🔗 Connect Wallet</button>
      <p id="statusMessage" style="color: red;">Please connect your wallet to continue.</p>
      <p id="connectedWalletAddress" style="display: none; margin-top: 10px;">Connected Wallet: <span id="walletDisplay"></span></p>
@@ -279,7 +304,7 @@
   <div id="connectedContent">
 
     <div class="box">
-       <h2>📦 Add/Manage Products</h2>
+       <h2>📦 Add/Manage Products (Seller)</h2>
 
        <h3>Add a New Product (Standard)</h3>
        <label>📝 Product Name: <input id="productName" /></label>
@@ -333,7 +358,7 @@
 
 
     <div class="box">
-      <h2>📬 Your Orders</h2>
+      <h2>📬 Your Orders (as Seller)</h2>
       <button id="orderNotificationBtn">🔔 New Orders <span class="notification-counter" id="orderCounter">0</span></button>
       <button id="deleteAllOrdersBtn" class="delete-btn">🗑️ Delete All Orders</button>
       <p>Total Order Value (Estimate): $<span id="sellerOrderValue">0</span></p>
@@ -344,7 +369,7 @@
     </div>
 
     <div class="box review-section">
-        <h2>⭐ Your Product Reviews</h2>
+        <h2>⭐ Your Product Reviews (as Seller)</h2>
          <div class="average-rating">
             <span class="score" id="sellerAverageRatingValue">0.0</span>
             <span class="stars" id="sellerAverageStarDisplay">
@@ -353,16 +378,26 @@
         </div>
         <div class="recent-reviews">
             <h4>Recent Reviews for Your Products</h4>
-            <ul id="sellerReviewList">
-                <p class="no-reviews-message">Connect wallet to see your reviews.</p>
-            </ul>
+            <div id="sellerReviewList" class="embedded-list">
+                <p class="no-data-message">Connect wallet to see your reviews.</p>
+            </div>
         </div>
+    </div>
+
+    <div class="box buyer-panel-section">
+        <h2>🛒 Your Purchases & Reviews (as Buyer)</h2>
+
+        <h3>Your Recent Purchase Orders</h3>
+        <div id="userPurchaseOrdersList" class="embedded-list">
+            <p class="no-data-message">Connect wallet to see your purchase history.</p>
+        </div>
+         <button onclick="window.location.href='purchase_history.html';" class="green-button" style="margin-top: 15px;">View All Purchase History</button>
     </div>
 
 
     <div id="supportMessagesContainer" class="box">
       <h2>💬 Your Support Messages</h2>
-      <ul id="supportMessageList"></ul>
+      <div id="supportMessageList" class="embedded-list"></div>
       <button id="deleteAllMessagesBtn" class="delete-btn">🗑️ Delete All Messages</button>
 
       </div>
@@ -373,7 +408,7 @@
     </div>
 
     <div class="box">
-        <h2>💳 Your Payment Methods</h2>
+        <h2>💳 Your Payment Methods (as Seller)</h2>
         <p>Enter the details buyers can use to pay you via alternative methods.</p>
 
         <label for="venmoIdentifier">📱 Venmo ID/Link:</label>
@@ -429,26 +464,28 @@ const storage = firebase.storage(); // Storage reference (Needed for image uploa
 let ethToUsd = 0; // Variable to store the current ETH to USD rate
 let connectedWallet = null; // Variable to store the connected wallet address
 let provider; // Ethers provider
-let signer; // Ethers signer
+let signer;
+
+let currentReviewProductId = null; // To store the product ID for the current review
 
 
 // Fetch ETH to USD price from CoinGecko API
 async function fetchEthUsdPrice() {
+  console.log("upanel: Fetching ETH to USD price...");
   try {
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
     const data = await response.json();
     ethToUsd = parseFloat(data.ethereum.usd);
-    console.log("Fetched ETH to USD rate:", ethToUsd);
-    // Update USD equivalent fields after fetching the rate
-     updateUsdFields();
-    // If wallet is already connected, reload orders to update USD values
+    console.log("upanel: Fetched ETH to USD rate:", ethToUsd);
+    // If wallet is already connected, reload data that depends on price
     if (connectedWallet) {
-        loadOrders(connectedWallet); // Load orders for the connected wallet
+        loadOrders(connectedWallet); // Load seller orders to update USD values
+        loadUserPurchaseOrders(connectedWallet); // Load buyer orders to update USD values
          // Load reviews for seller's products after price is fetched
         loadSellerReviews(connectedWallet);
     }
   } catch (error) {
-    console.error('Error fetching ETH price:', error);
+    console.error('upanel: Error fetching ETH price:', error);
     ethToUsd = 0; // Set to 0 or a fallback on error
      updateUsdFields(); // Still attempt to update fields even on error
   }
@@ -512,7 +549,7 @@ async function detectRegion() {
        regionOutput.innerText = `Region: ${region}`;
      } catch (error) {
        regionOutput.innerText = 'Could not detect region.';
-       console.error('Region detection failed:', error);
+       console.error('upanel: Region detection failed:', error);
      }
 }
 
@@ -642,7 +679,7 @@ async function addProduct() {
         alert('Product added successfully!');
         clearFields(); // Clear form fields after successful addition
     } catch (error) {
-        console.error("Error adding product:", error);
+        console.error("upanel: Error adding product:", error);
         alert('Error adding product: ' + error.message);
     }
 }
@@ -709,7 +746,7 @@ async function savePaymentInfo() {
     // Get the save status message element
     const saveStatusMessage = document.getElementById('saveStatusMessage');
     if (!saveStatusMessage) {
-        console.error("Save status message element not found!");
+        console.error("upanel: Save status message element not found!");
         alert('Payment information saved successfully!'); // Fallback to alert
         return;
     }
@@ -735,7 +772,7 @@ async function savePaymentInfo() {
         // alert('Payment information saved successfully!');
 
     } catch (error) {
-        console.error("Error saving payment info:", error);
+        console.error("upanel: Error saving payment info:", error);
         // Display an error message on the page
         saveStatusMessage.textContent = 'Error saving payment information: ' + error.message;
         saveStatusMessage.style.color = 'red'; // Make it red for errors
@@ -755,7 +792,7 @@ async function savePaymentInfo() {
 async function loadPaymentInfo(walletAddress) {
      if (!walletAddress) return;
 
-     console.log("Attempting to load payment info for wallet:", walletAddress); // Added log
+     console.log("upanel: Attempting to load payment info for wallet:", walletAddress); // Added log
 
      // Load payment info from the document named by the connected wallet address
      const sellerPaymentInfoRef = db.collection('sellerPaymentInfo').doc(walletAddress.toLowerCase());
@@ -771,8 +808,9 @@ async function loadPaymentInfo(walletAddress) {
              document.getElementById('googlePayIdentifier').value = data.googlePay || '';
              document.getElementById('applePayIdentifier').value = data.applePay || '';
              document.getElementById('taxWalletAddress').value = data.taxWalletAddress || ''; // Load tax wallet address
+             console.log("upanel: Payment information loaded.");
          } else {
-             console.log("No payment information found for this seller.");
+             console.log("upanel: No payment information found for this seller.");
              // Clear fields if no data exists for this wallet
              document.getElementById('venmoIdentifier').value = '';
              document.getElementById('cashAppIdentifier').value = '';
@@ -782,7 +820,7 @@ async function loadPaymentInfo(walletAddress) {
              document.getElementById('taxWalletAddress').value = ''; // Clear tax wallet address field
          }
      } catch (error) {
-         console.error("Error loading payment info:", error);
+         console.error("upanel: Error loading payment info:", error);
          // Display an error message on the page if loading fails
          const saveStatusMessage = document.getElementById('saveStatusMessage');
          if (saveStatusMessage) {
@@ -806,10 +844,15 @@ async function loadSupportMessages(walletAddress) {
     const supportList = document.getElementById('supportMessageList');
      if (!supportList || !walletAddress) return; // Exit if elements don't exist or no wallet
 
-    supportList.innerHTML = '<p>Loading messages...</p>';
+    supportList.innerHTML = '<p class="no-data-message">Loading messages...</p>';
+    console.log("upanel: Loading support messages for wallet:", walletAddress);
 
     try {
-        // Assuming support messages have a 'sellerWallet' field
+        // Assuming support messages have a 'sellerWallet' field OR 'buyerWallet' field
+        // For upanel, we likely want messages related to items they are selling OR items they bought.
+        // This listener currently only fetches messages where the connected wallet is the seller.
+        // To get messages where they are the buyer, you'd need another query or a different message structure.
+        // For now, keeping it focused on seller support messages as per the existing section title.
         const messagesSnapshot = await db.collection('supportMessages')
                                         .where('sellerWallet', '==', walletAddress.toLowerCase()) // Filter by seller wallet
                                         .orderBy('timestamp', 'desc')
@@ -819,20 +862,28 @@ async function loadSupportMessages(walletAddress) {
         supportList.innerHTML = ''; // Clear current list
 
         if (messages.length === 0) {
-            supportList.innerHTML = '<p>No support messages for your items.</p>';
+            supportList.innerHTML = '<p class="no-data-message">No support messages for your items.</p>';
+             console.log("upanel: No support messages found.");
             return;
         }
 
         messages.forEach(msg => {
-            const li = document.createElement('li');
+            const li = document.createElement('div'); // Use div for better styling flexibility
+            li.className = 'embedded-list-item'; // Use existing styling class
              const msgDate = msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleString() : 'N/A';
-            li.innerHTML = `<strong>${msg.name || 'Anonymous'}</strong> (${msgDate}): ${msg.message || 'No message content'}`;
+            li.innerHTML = `
+                <div class="item-details">
+                    <h4>Message from ${msg.name || 'Anonymous'} (${msgDate})</h4>
+                    <p>${msg.message || 'No message content'}</p>
+                    </div>
+            `;
             supportList.appendChild(li);
         });
+        console.log("upanel: Support messages loaded:", messages.length);
 
     } catch (error) {
-        console.error("Error loading support messages:", error);
-        supportList.innerHTML = '<p style="color: red;">Error loading messages.</p>';
+        console.error("upanel: Error loading support messages:", error);
+        supportList.innerHTML = '<p class="no-data-message" style="color: red;">Error loading messages.</p>';
     }
 }
 
@@ -857,7 +908,7 @@ async function deleteAllMessages() {
             alert('All support messages for your items deleted.');
             loadSupportMessages(connectedWallet); // Refresh the list
         } catch (error) {
-            console.error("Error deleting all messages:", error);
+            console.error("upanel: Error deleting all messages:", error);
             alert('Error deleting all messages: ' + error.message);
         }
     }
@@ -866,7 +917,7 @@ async function deleteAllMessages() {
 
 // --- Orders Functions (Using Firestore) ---
 
-// Load Orders from Firestore for the connected wallet
+// Load Orders from Firestore for the connected wallet (as Seller)
 async function loadOrders(walletAddress) {
     const orderList = document.getElementById('orderList');
     const orderCounter = document.getElementById('orderCounter');
@@ -874,14 +925,16 @@ async function loadOrders(walletAddress) {
      if (!orderList || !orderCounter || !sellerOrderValueSpan || !walletAddress) return; // Exit if elements don't exist or no wallet
 
 
-    orderList.innerHTML = '<p>Loading orders...</p>';
+    orderList.innerHTML = '<p class="no-data-message">Loading orders...</p>';
     orderCounter.textContent = '...'; // Indicate loading
+    console.log("upanel: Loading seller orders for wallet:", walletAddress);
 
     try {
         // Assuming orders have a 'sellerWallet' field
         const ordersSnapshot = await db.collection('orders')
                                        .where('sellerWallet', '==', walletAddress.toLowerCase()) // Filter by seller wallet
                                        .orderBy('timestamp', 'desc')
+                                       .limit(5) // Limit to recent orders
                                        .get();
         const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -889,15 +942,17 @@ async function loadOrders(walletAddress) {
         orderCounter.textContent = orders.length; // Update counter
 
         if (orders.length === 0) {
-            orderList.innerHTML = '<p>No recent orders for your items.</p>';
+            orderList.innerHTML = '<p class="no-data-message">No recent orders for your items.</p>';
             sellerOrderValueSpan.textContent = '0';
+            console.log("upanel: No seller orders found.");
             return;
         }
 
         let totalOrderValueUsd = 0;
 
         orders.forEach(order => {
-            const li = document.createElement('li');
+            const li = document.createElement('div'); // Use div for consistency with embedded-list-item
+            li.className = 'embedded-list-item'; // Use existing styling class
             const orderDate = order.timestamp ? new Date(order.timestamp.toDate()).toLocaleString() : 'N/A';
             const buyerShort = order.buyerWallet ? order.buyerWallet.slice(0, 6) + '...' + order.buyerWallet.slice(-4) : 'N/A';
              const totalEth = order.totalEth || 0;
@@ -911,25 +966,198 @@ async function loadOrders(walletAddress) {
 
 
             li.innerHTML = `
+                 <div class="item-details">
                   <strong>Order for:</strong> ${order.productName || 'N/A'} (x${order.quantity || 1})<br>
                   <strong>Buyer:</strong> ${buyerShort}<br>
-                  <strong>Total ETH:</strong> ${totalEth} ${ethToUsd ? '(~$' + orderValueUsd + ')' : ''}<br>
+                  <strong>Received:</strong> ${totalEth} ETH ${ethToUsd ? '(~$' + orderValueUsd + ')' : ''}<br>
                   <strong>Date:</strong> ${orderDate}
+                  </div>
                   `;
             orderList.appendChild(li);
         });
 
          // Update total order value display
          sellerOrderValueSpan.textContent = ethToUsd ? totalOrderValueUsd.toFixed(2) : 'N/A';
+         console.log("upanel: Seller orders loaded:", orders.length);
 
 
     } catch (error) {
-        console.error("Error loading orders:", error);
-        orderList.innerHTML = '<p style="color: red;">Error loading orders.</p>';
+        console.error("upanel: Error loading seller orders:", error);
+        orderList.innerHTML = '<p class="no-data-message" style="color: red;">Error loading orders.</p>';
         orderCounter.textContent = 'Error';
         sellerOrderValueSpan.textContent = 'Error';
     }
 }
+
+// Delete All Orders from Firestore for the connected wallet (as Seller)
+async function deleteAllOrders() {
+    if (!document.getElementById('orderList') || !connectedWallet) {
+        alert("Please connect your wallet first.");
+        return;
+    }
+
+    if (confirm('Are you sure you want to delete all orders for your items? This cannot be undone.')) {
+        try {
+            // Delete only orders where sellerWallet matches the connected wallet
+            const snapshot = await db.collection('orders')
+                                    .where('sellerWallet', '==', connectedWallet.toLowerCase())
+                                    .get();
+            const batch = db.batch();
+            snapshot.docs.forEach((doc) => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+            alert('All orders for your items deleted.');
+            loadOrders(connectedWallet); // Refresh the list
+             loadUserPurchaseOrders(connectedWallet); // Also refresh buyer orders list in case any were deleted
+        } catch (error) {
+            console.error("upanel: Error deleting all orders:", error);
+            alert('Error deleting all orders: ' + error.message);
+        }
+    }
+}
+
+
+// --- Buyer Orders & Reviews Functions (Using Firestore) ---
+
+// Load Purchase Orders from Firestore for the connected wallet (as Buyer)
+async function loadUserPurchaseOrders(walletAddress) {
+    const purchaseOrdersList = document.getElementById('userPurchaseOrdersList');
+     if (!purchaseOrdersList || !walletAddress) return; // Exit if elements don't exist or no wallet
+
+    purchaseOrdersList.innerHTML = '<p class="no-data-message">Loading your purchase history...</p>'; // Loading indicator
+    console.log("upanel: Loading buyer purchase orders for wallet:", walletAddress);
+
+
+    try {
+        // Assuming orders have a 'buyerWallet' field
+        const ordersSnapshot = await db.collection('orders')
+                                       .where('buyerWallet', '==', walletAddress.toLowerCase()) // Filter by buyer wallet
+                                       .orderBy('timestamp', 'desc')
+                                       .limit(5) // Limit to recent purchases
+                                       .get();
+        const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        purchaseOrdersList.innerHTML = ''; // Clear current list
+
+        if (orders.length === 0) {
+            purchaseOrdersList.innerHTML = '<p class="no-data-message">You have not purchased any items yet.</p>';
+             console.log("upanel: No buyer purchase orders found.");
+            return;
+        }
+
+        // Fetch product details for each order to display the image (Optional for this view, but good practice)
+        // This part is commented out to simplify the upanel view, but you can uncomment if needed.
+        // const productPromises = orders.map(order => {
+        //     if (order.productId) {
+        //         return db.collection('products').doc(order.productId).get();
+        //     }
+        //     return Promise.resolve(null); // Handle orders without a productId
+        // });
+
+        // const productSnapshots = await Promise.all(productPromises);
+        // const productsMap = {};
+        // productSnapshots.forEach(snapshot => {
+        //     if (snapshot && snapshot.exists) {
+        //         productsMap[snapshot.id] = snapshot.data();
+        //     }
+        // });
+
+
+        orders.forEach(order => {
+             // const productData = productsMap[order.productId] || {}; // Get product data for the order
+             // Render buyer order item with review button and product image
+            purchaseOrdersList.appendChild(renderOrderItem(order, 'buyer'));
+        });
+
+         console.log("upanel: User buyer purchase orders loaded:", orders.length);
+
+    } catch (error) {
+        console.error("upanel: Error loading user purchase orders:", error);
+        purchaseOrdersList.innerHTML = '<p class="no-data-message" style="color: red;">Error loading purchase history.</p>';
+    }
+}
+
+
+// Function to render a single order item (can be used for buyer or seller orders)
+// Modified to include review button for buyer orders
+function renderOrderItem(order, type = 'buyer') { // type can be 'buyer' or 'seller'
+     const orderDate = order.timestamp ? new Date(order.timestamp.toDate()).toLocaleString() : 'N/A';
+     const quantity = order.quantity || 1;
+     const productName = order.productName || 'N/A';
+     const buyerWallet = order.buyerWallet || 'N/A';
+     const sellerWallet = order.sellerWallet || 'N/A'; // Assuming sellerWallet is stored on order
+     const totalEth = order.totalEth || 'N/A'; // Assuming totalEth is stored on order
+     const orderValueUsd = ethToUsd ? (parseFloat(totalEth) * ethToUsd).toFixed(2) : 'N/A'; // Calculate USD value
+
+
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'embedded-list-item';
+
+    let detailsHTML = '';
+    if (type === 'buyer') {
+        detailsHTML = `
+            <h4>Purchased: ${productName} x ${quantity}</h4>
+            <p>Total Paid: ${totalEth} ETH ${ethToUsd ? '(~$' + orderValueUsd + ')' : ''}</p>
+            <p>Date: ${orderDate}</p>
+            <button onclick="promptForReview('${order.productId || order.id}', '${productName}')">Leave Review</button>
+             `;
+    } else if (type === 'seller') {
+         detailsHTML = `
+             <h4>Order for: ${productName} x ${quantity}</h4>
+             <p>Buyer: ${buyerWallet.slice(0, 6) + '...' + buyerWallet.slice(-4)}</p>
+             <p>Received: ${totalEth} ETH ${ethToUsd ? '(~$' + orderValueUsd + ')' : ''}</p>
+             <p>Date: ${orderDate}</p>
+             `;
+    }
+
+    itemDiv.innerHTML = `
+         <div class="item-details">
+             ${detailsHTML}
+         </div>
+         `;
+     // Add click handler to potentially view order details page (if you create one)
+     // itemDiv.style.cursor = 'pointer';
+     // itemDiv.onclick = () => { window.location.href = `order_details.html?id=${order.id}`; };
+
+    return itemDiv;
+}
+
+// Placeholder function to prompt for a review
+function promptForReview(productId, productName) {
+    // This is a placeholder. A real implementation would show a modal or navigate to a review page.
+    alert(`Leaving a review for "${productName}" (Product ID: ${productId}).\n\nReview submission functionality needs to be implemented.`);
+    // You would typically capture rating (e.g., 1-5 stars) and review text here
+    // and then save it to a 'reviews' collection in Firestore.
+    // Example:
+    // const rating = prompt("Enter your rating (1-5):");
+    // const reviewText = prompt("Enter your review:");
+    // if (rating && reviewText && connectedWallet) {
+    //     saveReview(productId, parseInt(rating), reviewText, connectedWallet);
+    // } else {
+    //     alert("Review cancelled or incomplete.");
+    // }
+}
+
+// Placeholder function to save a review to Firestore
+// async function saveReview(productId, rating, reviewText, reviewerWallet) {
+//     try {
+//         await db.collection('reviews').add({
+//             productId: productId,
+//             rating: rating,
+//             reviewText: reviewText,
+//             reviewerWallet: reviewerWallet.toLowerCase(),
+//             timestamp: firebase.firestore.FieldValue.serverTimestamp()
+//         });
+//         alert('Review submitted successfully!');
+//         // Optionally refresh the buyer orders list or reviews list
+//         loadUserPurchaseOrders(connectedWallet);
+//     } catch (error) {
+//         console.error("Error submitting review:", error);
+//         alert('Error submitting review: ' + error.message);
+//     }
+// }
+
 
 // --- Review Functions (Using Firestore) ---
 
@@ -955,14 +1183,15 @@ async function loadSellerReviews(sellerWalletAddress) {
     const sellerAverageStarDisplayDiv = document.getElementById('sellerAverageStarDisplay');
     const sellerReviewCountSpan = document.getElementById('sellerReviewCount');
 
-    sellerReviewList.innerHTML = '<p class="no-reviews-message">Loading reviews...</p>'; // Loading indicator
+    sellerReviewList.innerHTML = '<p class="no-data-message">Loading reviews...</p>'; // Loading indicator
     sellerAverageRatingValueSpan.textContent = '0.0';
     sellerAverageStarDisplayDiv.innerHTML = renderStars(0); // Display 0 stars initially
     sellerReviewCountSpan.textContent = '(0 reviews)';
 
+    console.log("upanel: Loading seller reviews for wallet:", sellerWalletAddress);
 
     if (!sellerWalletAddress) {
-        sellerReviewList.innerHTML = '<p class="no-reviews-message">Connect wallet to see your reviews.</p>';
+        sellerReviewList.innerHTML = '<p class="no-data-message">Connect wallet to see your reviews.</p>';
         return;
     }
 
@@ -975,10 +1204,11 @@ async function loadSellerReviews(sellerWalletAddress) {
         const productIds = productsSnapshot.docs.map(doc => doc.id);
 
         if (productIds.length === 0) {
-            sellerReviewList.innerHTML = '<p class="no-reviews-message">You have no products listed yet.</p>';
+            sellerReviewList.innerHTML = '<p class="no-data-message">You have no products listed yet.</p>';
              sellerAverageRatingValueSpan.textContent = '0.0';
              sellerAverageStarDisplayDiv.innerHTML = renderStars(0);
              sellerReviewCountSpan.textContent = '(0 reviews)';
+             console.log("upanel: No products found for seller, no reviews to load.");
             return;
         }
 
@@ -1013,33 +1243,37 @@ async function loadSellerReviews(sellerWalletAddress) {
 
 
         if (reviews.length === 0) {
-            sellerReviewList.innerHTML = '<p class="no-reviews-message">No reviews yet for your products.</p>';
+            sellerReviewList.innerHTML = '<p class="no-data-message">No reviews yet for your products.</p>';
+             console.log("upanel: No reviews found for seller products.");
             return;
         }
 
         // Display individual reviews
         reviews.forEach(review => {
-            const li = document.createElement('li');
+            const li = document.createElement('div'); // Use div for consistency with embedded-list-item
+             li.className = 'embedded-list-item'; // Use existing styling class
             const reviewerShort = review.reviewerWallet ? review.reviewerWallet.slice(0, 6) + '...' + review.reviewerWallet.slice(-4) : 'Anonymous';
             const reviewDate = review.timestamp ? new Date(review.timestamp.toDate()).toLocaleString() : 'N/A';
             const individualStarsHTML = renderStars(review.rating || 0); // Render stars for individual review
 
             li.innerHTML = `
-                <div class="review-header">
-                    <span class="reviewer">${reviewerShort}</span>
-                    <span class="review-date">${reviewDate}</span>
+                <div class="item-details">
+                    <div class="review-header">
+                        <span class="reviewer">${reviewerShort}</span>
+                        <span class="review-date">${reviewDate}</span>
+                    </div>
+                    <div class="review-rating">${individualStarsHTML}</div>
+                    <p>${review.reviewText || 'No review text provided.'}</p>
                 </div>
-                <div class="review-rating">${individualStarsHTML}</div>
-                <p>${review.reviewText || 'No review text provided.'}</p>
             `;
             sellerReviewList.appendChild(li);
         });
 
-        console.log("Loaded reviews for seller products:", sellerWalletAddress, "Count:", reviewCount, "Average Rating:", averageRating.toFixed(1));
+        console.log("upanel: Loaded reviews for seller products:", sellerWalletAddress, "Count:", reviewCount, "Average Rating:", averageRating.toFixed(1));
 
     } catch (error) {
-        console.error("Error loading seller reviews:", error);
-        sellerReviewList.innerHTML = '<p class="no-reviews-message" style="color: red;">Error loading reviews.</p>';
+        console.error("upanel: Error loading seller reviews:", error);
+        sellerReviewList.innerHTML = '<p class="no-data-message" style="color: red;">Error loading reviews.</p>';
          // Reset average rating display on error
         sellerAverageRatingValueSpan.textContent = '0.0';
         sellerAverageStarDisplayDiv.innerHTML = renderStars(0);
@@ -1060,39 +1294,53 @@ async function connectWallet() {
 
     // Check if MetaMask or similar wallet is installed (includes OKX Wallet)
     if (typeof window.ethereum !== 'undefined') {
+        console.log("upanel: window.ethereum detected. Attempting to connect wallet...");
         try {
             // Request account access
-            console.log("Requesting wallet accounts...");
+            console.log("upanel: Requesting wallet accounts...");
             provider = new ethers.providers.Web3Provider(window.ethereum, "any"); // Initialize provider
+            console.log("upanel: Ethers provider initialized.");
             const accounts = await provider.send("eth_requestAccounts", []);
-            connectedWallet = accounts[0]; // Get the first account
-            signer = provider.getSigner(); // Initialize signer
-            console.log("Wallet connected:", connectedWallet);
+            console.log("upanel: eth_requestAccounts returned:", accounts);
 
-            // Display connected wallet address
-            walletDisplay.textContent = connectedWallet;
-            connectedWalletAddressDiv.style.display = 'block';
-            statusMessage.style.display = 'none'; // Hide status message on successful connection
-            connectBtn.textContent = '✅ Connected'; // Update button text
+            if (accounts.length > 0) {
+                connectedWallet = accounts[0]; // Get the first account
+                signer = provider.getSigner(); // Initialize signer
+                console.log("upanel: Wallet connected successfully:", connectedWallet);
 
-            // Store connected wallet address in localStorage
-            localStorage.setItem('walletAddress', connectedWallet);
+                // Display connected wallet address
+                walletDisplay.textContent = connectedWallet;
+                connectedWalletAddressDiv.style.display = 'block';
+                statusMessage.style.display = 'none'; // Hide status message on successful connection
+                connectBtn.textContent = '✅ Connected'; // Update button text
 
-            // Show connected content and load data for this wallet
-            connectedContent.style.display = 'block';
-            loadOrders(connectedWallet);
-            loadSupportMessages(connectedWallet);
-            loadPaymentInfo(connectedWallet); // Load payment info when wallet connects
-            loadSellerReviews(connectedWallet); // Load seller's product reviews
+                // Store connected wallet address in localStorage
+                localStorage.setItem('walletAddress', connectedWallet);
+                console.log("upanel: Wallet address stored in localStorage:", connectedWallet);
 
 
-            // Add event listeners for account/chain changes after successful connection
-           window.ethereum.on('accountsChanged', handleAccountsChanged);
-           window.ethereum.on('chainChanged', handleChainChanged);
+                // Show connected content and load data for this wallet
+                connectedContent.style.display = 'block';
+                loadOrders(connectedWallet); // Load seller orders
+                loadSupportMessages(connectedWallet); // Load support messages
+                loadPaymentInfo(connectedWallet); // Load payment info
+                loadSellerReviews(connectedWallet); // Load seller's product reviews
+                loadUserPurchaseOrders(connectedWallet); // Load buyer purchase orders
 
 
+                // Add event listeners for account/chain changes after successful connection
+               window.ethereum.on('accountsChanged', handleAccountsChanged);
+               window.ethereum.on('chainChanged', handleChainChanged);
+               console.log("upanel: Wallet event listeners added on manual connect.");
+
+
+            } else {
+               console.log("upanel: eth_requestAccounts returned no accounts.");
+               disconnectWallet(); // Treat as disconnected if no accounts found
+               alert('Please select an account in your wallet.');
+            }
         } catch (error) {
-            console.error("Error connecting wallet:", error);
+            console.error("upanel: Error connecting wallet:", error);
             statusMessage.textContent = 'Error connecting wallet. ' + error.message;
             statusMessage.style.display = 'block';
             connectedWallet = null; // Clear connected wallet on error
@@ -1102,9 +1350,11 @@ async function connectWallet() {
             // Hide connected content if connection fails
             connectedContent.style.display = 'none';
              localStorage.removeItem('walletAddress'); // Clear stored wallet on connection error
+             console.log("upanel: Wallet address removed from localStorage due to connection error.");
         }
     } else {
         // If no injected wallet is found
+        console.log("upanel: window.ethereum not found. No Ethereum wallet detected.");
         statusMessage.textContent = 'No Ethereum wallet found (e.g., MetaMask, OKX Wallet). Please install one.';
         statusMessage.style.display = 'block';
         connectedWallet = null;
@@ -1114,36 +1364,41 @@ async function connectWallet() {
         // Hide connected content
         connectedContent.style.display = 'none';
          localStorage.removeItem('walletAddress'); // Ensure no wallet is stored if provider is missing
+         console.log("upanel: Wallet address removed from localStorage because window.ethereum was not found.");
     }
 }
 
 // Handle accounts changed event
 function handleAccountsChanged(accounts) {
-    console.log('Accounts changed:', accounts);
+    console.log('upanel: Accounts changed event fired:', accounts);
     if (accounts.length === 0) {
         // Wallet locked or no accounts connected
-        console.log('Wallet disconnected or accounts removed.');
+        console.log('upanel: Accounts changed: No accounts found. Disconnecting.');
         disconnectWallet(); // Treat as disconnected in the UI
-        alert('Wallet disconnected. Please connect again.');
+        alert('Wallet disconnected or accounts removed. Please connect again.');
     } else if (accounts[0].toLowerCase() !== connectedWallet?.toLowerCase()) {
         // Account changed - update display and reload data
-        console.log('Account changed to:', accounts[0]);
+        console.log('upanel: Accounts changed: Account changed to:', accounts[0]);
         connectedWallet = accounts[0]; // Update connected wallet
         document.getElementById('walletDisplay').textContent = connectedWallet; // Update display
         localStorage.setItem('walletAddress', connectedWallet); // Update stored wallet
         alert('Account changed. Reloading data for the new account.');
         // Reload data for the new account
-        loadOrders(connectedWallet);
-        loadSupportMessages(connectedWallet);
+        loadOrders(connectedWallet); // Reload seller orders
+        loadSupportMessages(connectedWallet); // Reload support messages
         loadPaymentInfo(connectedWallet); // Reload payment info for the new account
         loadSellerReviews(connectedWallet); // Reload seller's product reviews for the new account
+        loadUserPurchaseOrders(connectedWallet); // Reload buyer purchase orders for the new account
+    } else {
+         console.log('upanel: Accounts changed: Account is the same, no action needed.');
     }
 }
 
 // Handle chain changed event
 function handleChainChanged(chainId) {
+  console.log('upanel: Chain changed event fired:', chainId);
   // We should reload the page or re-initialize the provider if the network changes
-  console.log('Chain changed to:', chainId);
+  console.log('upanel: Chain changed to:', chainId);
   // A simple approach is to prompt the user to reload the page
   alert('Ethereum network changed. Please reload the page.');
    window.location.reload(); // Force a reload
@@ -1151,13 +1406,18 @@ function handleChainChanged(chainId) {
 
 // Disconnect wallet
 function disconnectWallet() {
+  console.log("upanel: Disconnecting wallet display.");
   connectedWallet = null;
   provider = null; // Clear provider and signer
   signer = null;
   if (window.ethereum) {
         // Remove listeners to prevent them from firing after manual disconnect
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-        window.ethereum.removeListener('chainChanged', handleChainChanged);
+        // Check if removeListener exists before attempting to remove
+        if (window.ethereum.removeListener) {
+            window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+            window.ethereum.removeListener('chainChanged', handleChainChanged);
+             console.log("upanel: Wallet event listeners removed.");
+        }
     }
   document.getElementById('walletDisplay').textContent = ''; // Clear display
   document.getElementById('connectedWalletAddress').style.display = 'none'; // Hide display
@@ -1166,11 +1426,11 @@ function disconnectWallet() {
   document.getElementById('statusMessage').style.display = 'block';
   document.getElementById('connectedContent').style.display = 'none'; // Hide content
   localStorage.removeItem('walletAddress'); // Clear stored wallet on disconnect
-  console.log("Wallet display disconnected.");
+  console.log("upanel: Wallet display disconnected. Wallet address removed from localStorage.");
   // Note: This function only updates the UI and clears variables. The actual wallet connection is managed by the browser extension.
 
-   // Clear review section when disconnected
-   document.getElementById('sellerReviewList').innerHTML = '<p class="no-reviews-message">Connect wallet to see your reviews.</p>';
+   // Clear review section (Seller) when disconnected
+   document.getElementById('sellerReviewList').innerHTML = '<p class="no-data-message">Connect wallet to see your reviews.</p>';
    document.getElementById('sellerAverageRatingValue').textContent = '0.0';
    document.getElementById('sellerAverageStarDisplay').innerHTML = renderStars(0);
    document.getElementById('sellerReviewCount').textContent = '(0 reviews)';
@@ -1183,12 +1443,20 @@ function disconnectWallet() {
     document.getElementById('applePayIdentifier').value = '';
     document.getElementById('taxWalletAddress').value = ''; // Clear tax wallet address field
 
+     // Clear support messages when disconnected
+    document.getElementById('supportMessageList').innerHTML = '<p class="no-data-message">Connect wallet to see your messages.</p>';
+
+     // Clear buyer orders when disconnected
+    document.getElementById('userPurchaseOrdersList').innerHTML = '<p class="no-data-message">Connect wallet to see your purchase history.</p>';
+
+
 }
 
 
 // --- Event Listeners and Initialization ---
 
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log("upanel: DOMContentLoaded. Starting initialization.");
 
     // Fetch ETH price on load
     fetchEthUsdPrice();
@@ -1198,6 +1466,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Wallet Connect Button Listener
     document.getElementById('connectWalletBtn')?.addEventListener('click', connectWallet);
+
 
     // Add Product button listener
     document.getElementById('addProductBtn')?.addEventListener('click', addProduct);
@@ -1209,7 +1478,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('savePaymentInfoBtn')?.addEventListener('click', savePaymentInfo);
 
 
-    // Order Notification button listener (Toggles visibility of order list)
+    // Order Notification button listener (Toggles visibility of seller order list)
     document.getElementById('orderNotificationBtn')?.addEventListener('click', () => {
       const orderListContainer = document.getElementById('orderListContainer');
       if (orderListContainer) {
@@ -1219,11 +1488,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // Delete All Orders button listener
+    // Delete All Orders button listener (Seller Orders)
     document.getElementById('deleteAllOrdersBtn')?.addEventListener('click', deleteAllOrders);
 
-    // Delete All Messages button listener
+    // Delete All Messages button listener (Seller Support Messages)
     document.getElementById('deleteAllMessagesBtn')?.addEventListener('click', deleteAllMessages);
+
+
+    // Re-add the ETH price input listener for the Add Product sections
+    document.getElementById('ethPrice')?.addEventListener('input', updateUsdFields);
+    document.getElementById('nftEthPrice')?.addEventListener('input', updateUsdFields);
+    document.getElementById('socialLinkEthPrice')?.addEventListener('input', updateUsdFields);
 
 
     // Initial display state (hide connected content until wallet is connected)
@@ -1231,10 +1506,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('statusMessage').style.display = 'block'; // Show initial status message
 
     // Initial state for lists before connection
-    document.getElementById('orderList').innerHTML = '<p>Connect your wallet to see your orders.</p>';
-    document.getElementById('supportMessageList').innerHTML = '<p>Connect your wallet to see your messages.</p>';
-     // Initial state for reviews before connection
-    document.getElementById('sellerReviewList').innerHTML = '<p class="no-reviews-message">Connect wallet to see your reviews.</p>';
+    document.getElementById('orderList').innerHTML = '<p class="no-data-message">Connect your wallet to see your orders.</p>'; // Seller orders
+    document.getElementById('supportMessageList').innerHTML = '<p class="no-data-message">Connect wallet to see your messages.</p>'; // Seller support messages
+     // Initial state for reviews before connection (Seller reviews)
+    document.getElementById('sellerReviewList').innerHTML = '<p class="no-data-message">Connect wallet to see your reviews.</p>';
     document.getElementById('sellerAverageRatingValue').textContent = '0.0';
     document.getElementById('sellerAverageStarDisplay').innerHTML = renderStars(0);
     document.getElementById('sellerReviewCount').textContent = '(0 reviews)';
@@ -1247,53 +1522,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('applePayIdentifier').value = '';
     document.getElementById('taxWalletAddress').value = ''; // Clear tax wallet address field
 
+    // Initial state for buyer orders list before connection
+    document.getElementById('userPurchaseOrdersList').innerHTML = '<p class="no-data-message">Connect wallet to see your purchase history.</p>';
+
 
     // --- Wallet Auto-Connection Logic ---
     // This block attempts to automatically connect the wallet if it was previously connected
     // and the browser extension is available and unlocked.
     const storedWallet = localStorage.getItem('walletAddress'); // Check if a wallet address was stored from a previous session
+    console.log("upanel: Stored wallet address in localStorage:", storedWallet);
+
     if (storedWallet && typeof window.ethereum !== 'undefined') { // Check if a wallet was stored AND the Ethereum provider is available
+        console.log("upanel: Stored wallet found and window.ethereum is available. Attempting auto-connection.");
         try {
             provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+            console.log("upanel: Provider initialized for auto-connection.");
             // Use eth_accounts to check for already connected accounts without prompting the user
             const accounts = await provider.send("eth_accounts", []); // This is the key for non-prompting check
+            console.log("upanel: eth_accounts returned:", accounts);
 
             if (accounts.length > 0 && accounts[0].toLowerCase() === storedWallet.toLowerCase()) {
                 // If accounts are found and the first one matches the stored address, assume connected
                 connectedWallet = accounts[0]; // Update connected wallet variable
                 signer = provider.getSigner(); // Initialize signer after getting provider
-                updateWalletDisplay(connectedWallet); // Update UI
-                console.log("Auto-connected to stored wallet:", connectedWallet);
-                // Show connected content and load data
-                document.getElementById('connectedContent').style.display = 'block';
-                document.getElementById('statusMessage').style.display = 'none';
-                loadOrders(connectedWallet);
-                loadSupportMessages(connectedWallet);
+                updateWalletDisplay(connectedWallet); // Update UI based on wallet
+                console.log("upanel: Auto-connected successfully to stored wallet:", connectedWallet);
+                // Load all user-specific data after auto-connection
+                loadOrders(connectedWallet); // Load seller orders
+                loadSupportMessages(connectedWallet); // Load support messages
                 loadPaymentInfo(connectedWallet); // Load payment info on auto-connect
                 loadSellerReviews(connectedWallet); // Load seller's product reviews on auto-connect
+                loadUserPurchaseOrders(connectedWallet); // Load buyer purchase orders on auto-connect
+
 
                 // Add listeners for existing connections on load
                 window.ethereum.on('accountsChanged', handleAccountsChanged);
                 window.ethereum.on('chainChanged', handleChainChanged);
+                console.log("upanel: Wallet event listeners added on auto-connect.");
+
 
             } else {
                 // Stored wallet not found, or wallet is locked/disconnected from this site
-                console.log("Stored wallet not found or not connected to this site.");
+                console.log("upanel: Auto-connection failed: Stored wallet not found or not connected to this site.");
                 localStorage.removeItem('walletAddress'); // Clear stored wallet as it's no longer valid
                 updateWalletDisplay(null); // Ensure UI is correct (disconnected state)
             }
         } catch (error) {
-            console.error("Error during auto-connection check:", error);
+            console.error("upanel: Error during auto-connection check:", error);
             localStorage.removeItem('walletAddress'); // Clear stored wallet on error
             updateWalletDisplay(null); // Ensure UI is correct on error
         }
     } else {
         // No stored wallet or window.ethereum is not available
+        console.log("upanel: No stored wallet or window.ethereum not available. Cannot auto-connect.");
         updateWalletDisplay(null); // Ensure UI is correct (disconnected state)
-        console.log("No stored wallet or Ethereum provider not found.");
     }
     // --- End of Wallet Auto-Connection Logic ---
+    console.log("upanel: Initialization complete.");
 });
+
 
 // Function to update the wallet display and button text
 function updateWalletDisplay(account) {
@@ -1301,17 +1588,20 @@ function updateWalletDisplay(account) {
     const connectBtn = document.getElementById('connectWalletBtn');
     const connectedWalletAddressDiv = document.getElementById('connectedWalletAddress');
 
+
     if (account) {
       const short = account.slice(0, 6) + "..." + account.slice(-4);
       walletDisplay.textContent = account; // Display full address in span
       connectedWalletAddressDiv.style.display = 'block'; // Show the display div
       connectBtn.textContent = '✅ Connected'; // Update button text
+      console.log("upanel: Wallet display updated: Connected to", account);
       // You might want to add a button here to disconnect the wallet display if needed
     } else {
         // Wallet is disconnected
         walletDisplay.textContent = ''; // Clear display
         connectedWalletAddressDiv.style.display = 'none'; // Hide the display div
         connectBtn.textContent = '🔌 Connect Wallet'; // Reset button text
+        console.log("upanel: Wallet display updated: Disconnected.");
     }
 }
 
