@@ -19,6 +19,10 @@
     .wallet-controls {
       display: flex; flex-direction: column; gap: 10px; align-items: center;
     }
+    .wallet-controls button {
+       padding: 8px 12px; border-radius: 4px; border: none;
+       cursor: pointer; width: 100%;
+    }
     .connect-btn {
       background: #0073e6; color: white; border: none;
       padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%;
@@ -142,6 +146,21 @@
            background-color: #45a049; /* Darker green on hover */
        }
 
+       /* Style for the new Purchase History button (blue) */
+       #purchaseHistoryBtn {
+           background: #0073e6; /* Blue color, similar to connect/admin */
+           color: white;
+           border: none;
+           padding: 8px 12px;
+           border-radius: 4px;
+           cursor: pointer;
+           width: 100%;
+           display: none; /* Hidden by default */
+       }
+        #purchaseHistoryBtn:hover {
+            background: #005bb5; /* Darker blue on hover */
+        }
+
 
       /* Styles for embedded lists/items */
       .embedded-list {
@@ -197,6 +216,7 @@
     <span id="walletDisplay">Wallet: —</span>
     <button id="connectBtn" class="connect-btn">🔌 Connect Wallet</button>
     <button id="listItemBtn" class="list-item-btn" onclick="window.location.href = 'upanel.html';">📦 List an Item</button>
+    <button id="purchaseHistoryBtn" onclick="window.location.href = 'purchase_history.html';">📦 Purchase History</button>
     <button id="adminBtn" onclick="window.location.href = 'admin.html';">Admin Panel</button>
     <button id="contactBtn" onclick="window.location.href = 'support.html';">Support & Contact</button>
      <button id="homeBtnHeader" onclick="location.href='index.html'">🏠 Home</button>
@@ -329,7 +349,7 @@ async function updateWalletDisplay(account) {
   const connectBtn = document.getElementById('connectBtn');
   const listItemBtn = document.getElementById('listItemBtn');
   const adminBtn = document.getElementById('adminBtn');
-  // const profileBtn = document.getElementById('profileBtn'); // Removed as Profile button is in header now
+  const purchaseHistoryBtn = document.getElementById('purchaseHistoryBtn'); // Get the new button
    const homeBtnHeader = document.getElementById('homeBtnHeader'); // Get the Home button in header
 
 
@@ -337,6 +357,10 @@ async function updateWalletDisplay(account) {
       const short = userAccount.slice(0, 6) + "..." + userAccount.slice(-4);
       walletDisplay.textContent = `Wallet: ${short}`;
       connectBtn.textContent = '✅ Connected';
+
+      // Show Purchase History button when wallet is connected
+      if (purchaseHistoryBtn) purchaseHistoryBtn.style.display = 'inline-block';
+
 
       // Manage visibility of other buttons based on wallet type
       if (userAccount.toLowerCase() === ADMIN_WALLET.toLowerCase()) {
@@ -356,6 +380,8 @@ async function updateWalletDisplay(account) {
         connectBtn.textContent = '🔌 Connect Wallet';
         adminBtn.style.display = 'none';
         listItemBtn.style.display = 'none';
+        // Hide Purchase History button when disconnected
+        if (purchaseHistoryBtn) purchaseHistoryBtn.style.display = 'none';
          // The Home button in the header should always be visible
         if (homeBtnHeader) homeBtnHeader.style.display = 'inline-block';
 
