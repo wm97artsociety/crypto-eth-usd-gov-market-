@@ -2,6 +2,15 @@
 
 perfect software ready for selling just add wallet admin address, and payment and nft apis 
 
+
+new update v1.03
+
+gov market added (gov index market page with solo listings for gov vendors)
+
+support section added to gov market hub to sign up to be goverment seller for items 
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 new update v1.02
 
 backend updated for new update
