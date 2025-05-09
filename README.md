@@ -18,6 +18,12 @@ gov market tab created for new market index to be added in the future
 
 normal market for everyday people, goverment listings for gov market 
 
+rules menu button added to the marketplace 
+
+general rules for sellers, buyers and transactions 
+
+
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 new update v1.01
