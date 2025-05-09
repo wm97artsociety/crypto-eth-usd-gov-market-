@@ -391,6 +391,13 @@
         <label for="applePayIdentifier"> Apple Pay Identifier:</label>
         <input type="text" id="applePayIdentifier" placeholder="Your Apple Pay Identifier" />
 
+        <hr style="margin: 20px 0;"> <h3>🏛️ Tax Wallet Information</h3>
+        <p>Provide a separate wallet address for receiving tax portions of sales.</p>
+        <label for="taxWalletAddress">🧾 Tax Wallet Address:</label>
+        <input type="text" id="taxWalletAddress" placeholder="0x..." />
+         <p style="font-size: 0.9em; color: #555; margin-top: -10px;">(A percentage of sales may be sent to this address for tax purposes user tax wallet is stored in firebase by google admin does not control users funds or tax wallets.)</p>
+
+
         <button id="savePaymentInfoBtn" class="green-button">💾 Save Payment Info</button>
 
         <p id="saveStatusMessage">Payment information saved successfully!</p>
@@ -671,7 +678,7 @@ function clearFields() {
 
 // --- Payment Info Functions (Using Firestore) ---
 
-// Function to save payment addresses to Firestore for the connected wallet
+// Function to save payment addresses and tax wallet to Firestore for the connected wallet
 async function savePaymentInfo() {
     if (!connectedWallet) {
         alert("Please connect your wallet first.");
@@ -683,14 +690,18 @@ async function savePaymentInfo() {
     const paypal = document.getElementById('paypalIdentifier').value.trim();
     const googlePay = document.getElementById('googlePayIdentifier').value.trim();
     const applePay = document.getElementById('applePayIdentifier').value.trim();
+    const taxWalletAddress = document.getElementById('taxWalletAddress').value.trim(); // Get tax wallet address
 
-    // Create an object with only the non-empty payment identifiers
+    // Create an object with only the non-empty payment identifiers and the tax wallet
     const paymentDataToSave = {};
     if (venmo) paymentDataToSave.venmo = venmo;
     if (cashApp) paymentDataToSave.cashApp = cashApp;
     if (paypal) paymentDataToSave.paypal = paypal;
     if (googlePay) paymentDataToSave.googlePay = googlePay;
     if (applePay) paymentDataToSave.applePay = applePay;
+    // Always save tax wallet address, even if empty, to clear it if needed
+    paymentDataToSave.taxWalletAddress = taxWalletAddress;
+
 
     // Add a timestamp
     paymentDataToSave.lastUpdated = firebase.firestore.FieldValue.serverTimestamp();
@@ -740,7 +751,7 @@ async function savePaymentInfo() {
     }
 }
 
-// Function to load payment addresses from Firestore for the connected wallet
+// Function to load payment addresses and tax wallet from Firestore for the connected wallet
 async function loadPaymentInfo(walletAddress) {
      if (!walletAddress) return;
 
@@ -759,6 +770,7 @@ async function loadPaymentInfo(walletAddress) {
              document.getElementById('paypalIdentifier').value = data.paypal || '';
              document.getElementById('googlePayIdentifier').value = data.googlePay || '';
              document.getElementById('applePayIdentifier').value = data.applePay || '';
+             document.getElementById('taxWalletAddress').value = data.taxWalletAddress || ''; // Load tax wallet address
          } else {
              console.log("No payment information found for this seller.");
              // Clear fields if no data exists for this wallet
@@ -767,6 +779,7 @@ async function loadPaymentInfo(walletAddress) {
              document.getElementById('paypalIdentifier').value = '';
              document.getElementById('googlePayIdentifier').value = '';
              document.getElementById('applePayIdentifier').value = '';
+             document.getElementById('taxWalletAddress').value = ''; // Clear tax wallet address field
          }
      } catch (error) {
          console.error("Error loading payment info:", error);
@@ -1161,6 +1174,15 @@ function disconnectWallet() {
    document.getElementById('sellerAverageRatingValue').textContent = '0.0';
    document.getElementById('sellerAverageStarDisplay').innerHTML = renderStars(0);
    document.getElementById('sellerReviewCount').textContent = '(0 reviews)';
+
+    // Clear payment info fields when disconnected
+    document.getElementById('venmoIdentifier').value = '';
+    document.getElementById('cashAppIdentifier').value = '';
+    document.getElementById('paypalIdentifier').value = '';
+    document.getElementById('googlePayIdentifier').value = '';
+    document.getElementById('applePayIdentifier').value = '';
+    document.getElementById('taxWalletAddress').value = ''; // Clear tax wallet address field
+
 }
 
 
@@ -1216,6 +1238,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('sellerAverageRatingValue').textContent = '0.0';
     document.getElementById('sellerAverageStarDisplay').innerHTML = renderStars(0);
     document.getElementById('sellerReviewCount').textContent = '(0 reviews)';
+
+    // Initial state for payment info fields before connection
+    document.getElementById('venmoIdentifier').value = '';
+    document.getElementById('cashAppIdentifier').value = '';
+    document.getElementById('paypalIdentifier').value = '';
+    document.getElementById('googlePayIdentifier').value = '';
+    document.getElementById('applePayIdentifier').value = '';
+    document.getElementById('taxWalletAddress').value = ''; // Clear tax wallet address field
 
 
     // --- Wallet Auto-Connection Logic ---
