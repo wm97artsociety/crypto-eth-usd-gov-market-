@@ -1,5 +1,126 @@
 # crypto-eth-usd-gov-market-
 
+add on rarible api with $700 trillion for world debt used only for exchange of currency with inflation rate and so much more to reboost economy nfts only allowed to be bought through funding if government and sec approve order of $700 trillion to the economy to whipe away worldwide debt 
+
+project-root/
+
+├── index.html  
+
+# Main homepage with button to access NFT marketplace and IRA dashboard (auto-connects to OKX)
+├── css/
+
+│   └── style.css   
+
+# Styles for the dashboard, NFT UI, IRA layout
+├── js/
+
+│   ├── app.js  
+
+# Main JS logic
+│   ├── rarible-api.js
+
+# Handles live calls to Rarible API for real NFTs
+
+│   ├── faucet.js 
+
+# Programmable faucet logic tied to IRA distribution (7% of $700T/hr virtual fund)
+│   ├── connect-okx.js 
+
+# Script to auto-connect wallet to OKX from index.html
+├── components/
+
+│   ├── navbar.html   
+
+# Shared navigation bar across views
+│   ├── sidebar.html  
+
+# Sidebar UI: Top 50 + New 1000 NFT collections
+
+│   ├── nft-card.html
+
+# Real NFT card templates using Rarible API and IPFS images
+│   ├── chart.html  
+
+# Chart for user earnings vs time (daily, weekly)
+
+│   └── counter.html 
+
+# Total funds distributed + user count counter
+
+├── pages/
+
+│   ├── dashboard.html 
+
+# NFT dashboard with search, feature cards, and UI layout
+
+│   ├── collection.html 
+
+# Specific NFT collection view via Rarible
+│   ├── all-collections.html 
+
+# All NFT collections from Rarible with sort and filter
+
+
+│   ├── buy-nft.html 
+
+# Live NFT purchase page supporting Mastercard/Visa and OKX gateway (no external wallet.js)
+
+
+│   ├── ira-dashboard.html  
+
+# IRA funding page with faucet claim, word chart, and economy stats
+│   └── marketplace.html  
+
+# NFT marketplace with full global reach (GitHub layout)
+
+├── data/
+
+│   ├── faucet-users.json  
+
+# Tracks real-time users and funds given
+├── img/
+
+
+│   └── ipfs/  
+
+# NFT image assets pulled dynamically via IPFS hash (from Rarible)
+├── fonts/
+
+│   └── ...  
+
+# Optional custom fonts
+├── utils/
+
+│   ├── formatter.js  
+
+# Utility formatting tools (currency, date)
+
+│   └── inflation.js  
+
+# Custom inflation handler (token age + fiat devaluation calculator)
+
+└── README.md  
+
+# Docs: Setup, layout, features, and integration flow
+
+# Software Bio:
+This crypto-eth-usd-gov-market- powered platform integrates a real-time NFT marketplace using the Rarible API with a programmable virtual fund IRA system. Features include:
+
+- **IRA Dashboard**: Programmable faucet issuing 7% of $700 trillion/hour to users with charting, word economy stats, and counter tracking.
+- **NFT Marketplace**: Global NFT view powered by Rarible's live API. View collections, search NFTs, and purchase using OKX or direct Mastercard/Visa checkout.
+- **Real Asset Integration**: NFT images and metadata pulled directly via IPFS. Layout mirrors the open GitHub project aesthetic.
+- **Decentralized UI**: No mock JSON, real token listings only.
+- **Auto-Connect Wallet**: Native OKX wallet integration via browser, replacing external wallet.js entirely.
+- **Custom Economy Engine**: Inflation reversal model + token valuation based on mint year and monetary history.
+
+Perfect for decentralized economic testing, government-simulated virtual funds, and NFT integration without relying on mock data. Built for expansion.
+
+
+
+
+
+------------------------------------------
+
 perfect software ready for selling just add wallet admin address, and payment and nft apis 
 
 rule section for gov market needs to be updated for gov sellers 
