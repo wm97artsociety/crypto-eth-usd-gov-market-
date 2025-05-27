@@ -29,9 +29,11 @@ Exchange for real liquidity through the programmable faucet engine
 💸 Faucet Engine
 Located in: js/faucet.js
 
-Pulls from a programmable $700 trillion virtual fund
+Pulls from a programmable $700 trillion virtual fund to real funds lol 🤣 🤣 🤣 
 
 Distributes **7%
+
+today i feed the kitty meow meow 
 
 
 project-root/
