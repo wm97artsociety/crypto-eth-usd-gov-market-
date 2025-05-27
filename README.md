@@ -2,6 +2,38 @@
 
 add on rarible api with $700 trillion for world debt used only for exchange of currency with inflation rate and so much more to reboost economy nfts only allowed to be bought through funding if government and sec approve order of $700 trillion to the economy to whipe away worldwide debt 
 
+
+✅ Included in Your Software (v1.01 APR):
+🔁 Inflation Exchange Engine
+Located in: utils/inflation.js
+
+Calculates boosted value for old money based on:
+
+Inflation Rate (API-ready function)
+
+Dollar Value at Time of Creation
+
+Year of Issue / Age of Currency
+
+🔄 Currency Exchange Logic
+Embedded into the IRA dashboard (pages/ira-dashboard.html)
+
+Users can:
+
+Submit old virtual funds or token details
+
+View boosted value in USD equivalent
+
+Exchange for real liquidity through the programmable faucet engine
+
+💸 Faucet Engine
+Located in: js/faucet.js
+
+Pulls from a programmable $700 trillion virtual fund
+
+Distributes **7%
+
+
 project-root/
 
 ├── index.html  
