@@ -5,30 +5,55 @@ new encryption added
 file structure
 
 /
+
 ├── admin.html
+
 ├── crypto_tax.html
+
 ├── ddos_guard.js
+
 ├── encryption_engine.js
+
 ├── firebase_api.js
+
 ├── gov_market_index.html
+
 ├── goverment_trade.html
+
 ├── index.html
+
 ├── index.tsx
+
 ├── license.mit.txt
+
 ├── manifest.json
+
 ├── node.js
+
 ├── plugin_api.js
+
 ├── product.html
+
 ├── product.js
+
 ├── product_database.html
+
 ├── purchase_history.html
+
 ├── readme.md
+
 ├── rotate_keys.js
+
 ├── rules.html
+
 ├── secure_https_demo.html
+
 ├── support.html
+
 ├── upanel (3).html
+
 ├── user_profile (5).html
+
 ├── vierfy.html
 
 
