@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Profile</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; }
+    .top-bar {
+      background: #333333; 
+      color: white; 
+      padding: 10px 20px;
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+    }
+
+    .wallet-controls {
+      display: flex; 
+      flex-direction: column; 
+      gap: 10px; 
+      align-items: center;
+    }
+
+    .wallet-controls button {
+      padding: 8px 12px; 
+      border-radius: 4px; 
+      border: none;
+      cursor: pointer; 
+      width: 100%;
+    }
+    .connect-btn {
+      background: #0073e6; 
+      color: white;
+    }
+    .connect-btn:hover { 
+      background: #005bb5; 
+    }
+
+    .list-item-btn {
+      background: #28a745;
+      color: white;
+      display: none;
+    }
+    .list-item-btn:hover { 
+      background: #218838; 
+    }
+
+    #adminBtn {
+      background: #0073e6;
+      color: white;
+      display: none;
+    }
+    #adminBtn:hover { 
+      background: #005bb5; 
+    }
+
+    #contactBtn {
+      background: #f39c12;
+      color: white;
+    }
+    #contactBtn:hover {
+      background: #e67e22;
+    }
+
+    #homeBtnHeader {
+      background: #28a745;
+      color: white;
+    }
+    #homeBtnHeader:hover { 
+      background: #218838; 
+    }
+
+    #purchaseHistoryBtn {
+      background: #0073e6;
+      color: white;
+      display: none;
+    }
+    #purchaseHistoryBtn:hover { 
+      background: #005bb5; 
+    }
+
+    @media (max-width: 768px) {
+      .header-menu {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .search-bar {
+        width: 100%;
+        max-width: none;
+      }
+      .products {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      }
+    }
+
+    .container {
+      max-width: 100%;
+      padding: 15px;
+      margin: 15px auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .profile-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      text-align: center;
+      gap: 20px;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    .profile-photo {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #0073e6;
+    }
+    .profile-details {
+      flex-grow: 1;
+      min-width: 250px;
+    }
+    .profile-details h2 {
+      font-size: 1rem;
+      word-break: break-word;
+      margin-bottom: 10px;
+    }
+    .profile-photo-upload {
+      margin-top: 10px;
+    }
+    .profile-photo-upload button {
+      width: 100%;
+      max-width: 200px;
+      margin-top: 5px;
+    }
+    .bio-section {
+      margin-top: 20px;
+    }
+    .bio-section textarea {
+      width: 100%;
+      max-width: 600px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .bio-section button {
+      margin-top: 10px;
+      width: 100%;
+      max-width: 200px;
+    }
+    .section-title {
+      margin-top: 30px;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="top-bar">
+  <div>
+    <h1>🌎 Universal Crypto Marketplace</h1>
+    <p>Buy items using ETH!</p>
+  </div>
+
+<div class="wallet-controls">
+  <span id="walletDisplay">Wallet: —</span>
+  <button id="connectBtn" class="connect-btn">🔌 Connect Wallet</button>
+  <button id="listItemBtn" class="list-item-btn" onclick="window.location.href = 'upanel.html';">📦 List an Item</button>
+  <button id="purchaseHistoryBtn" onclick="window.location.href = 'purchase_history.html';">📦 Purchase History</button>
+  <button id="adminBtn" onclick="window.location.href = 'admin.html';">Admin Panel</button>
+  <button id="contactBtn" onclick="window.location.href = 'support.html';">Support & Contact</button>
+  <button id="homeBtnHeader" onclick="location.href='index.html'">🏠 Home</button>
+</div>
+
+</div>
+
+<div class="container">
+  <h1>Your Profile</h1>
+  <div class="profile-section">
+    <img src="placeholder-profile.png" alt="Profile Photo" class="profile-photo" id="profilePhoto">
+    <div class="profile-details">
+      <h2>Wallet Address: <span id="profileWalletAddress">Not Connected</span></h2>
+      <div class="profile-photo-upload">
+        <p>Change Profile Photo:</p>
+        <input type="file" id="profilePhotoFile" accept="image/*">
+        <button id="uploadPhotoBtn" class="connect-btn">Upload Photo</button>
+        <p id="uploadStatus" style="font-size: 0.9em; color: green;"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bio-section">
+    <h4 class="section-title">Your Bio</h4>
+    <textarea id="userBio" rows="4" placeholder="Enter your bio here..."></textarea>
+    <button id="saveBioBtn" class="connect-btn">Save Bio</button>
+    <p id="bioSaveStatus" style="font-size: 0.9em; color: green;"></p>
+  </div>
+
+  <h3 class="section-title">Your Marketplace Activity</h3>
+  <h4 class="section-title">Your Latest 5 Listings</h4>
+  <div id="userLatestListings">
+    <p class="no-data-message">Connect wallet to see your listings.</p>
+  </div>
+</div>
+
+<footer style="text-align:center; margin-top:20px;">
+  &copy; 2025 Universal Crypto Marketplace. All Rights Reserved.
+</footer>
+
+<script>
+// Firebase Configuration (REPLACE WITH YOUR ACTUAL CONFIG)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY", // Replace with your API Key
+  authDomain: "YOUR_AUTH_DOMAIN", // Replace with your Auth Domain
+  projectId: "YOUR_PROJECT_ID", // Replace with your Project ID
+  storageBucket: "YOUR_STORAGE_BUCKET", // Replace with your Storage Bucket
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your Messaging Sender ID
+  appId: "YOUR_APP_ID" // Replace with your App ID
+};
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+const storage = firebase.storage(); // Initialize Firebase Storage
+
+
+// ⚡ ADMIN WALLET ADDRESS (Needed for button display logic)
+const ADMIN_WALLET = "0x99fd24a80f98607faf53cc24dda0af9bb967bc8b"; // Replace with your actual admin wallet
+
+
+let userAccount = null;
+let provider;
+let signer;
+let ethToUsd = 0; // Fetch ETH price for displaying in listings
+
+
+// Fetch ETH to USD price (needed for displaying USD equivalent in listings)
+async function fetchEthToUsd() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+    const data = await res.json();
+    ethToUsd = data.ethereum.usd;
+  } catch (err) {
+    console.error('Failed to fetch ETH to USD:', err);
+    ethToUsd = 0; // Set to 0 on error
+  }
+}
+
+
+// --- Wallet Connection and Display Logic ---
+
+async function connectWallet() {
+  if (window.ethereum) {
+    try {
+      provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      // Request accounts - this will prompt the user if not already connected
+      const accounts = await provider.send("eth_requestAccounts", []); // Use send for explicit request
+      signer = provider.getSigner();
+      if (accounts.length > 0) {
+          updateWalletDisplay(accounts[0]);
+          localStorage.setItem('walletAddress', accounts[0]); // Store connected wallet
+          // Load user specific data after connection
+          loadUserProfileData(accounts[0]); // Load profile data for the connected user
+           // Add event listeners for account/chain changes after successful connection
+           window.ethereum.on('accountsChanged', handleAccountsChanged);
+           window.ethereum.on('chainChanged', handleChainChanged);
+      } else {
+           console.log("No accounts returned after request.");
+           disconnectWallet(); // Treat as disconnected in the UI
+           alert('Please select an account in your wallet.');
+      }
+    } catch (error) {
+        console.error("Error connecting wallet:", error);
+        alert('Error connecting wallet: ' + error.message);
+        disconnectWallet(); // Ensure UI is clean on error
+    }
+  } else {
+    alert('Please install MetaMask or an Ethereum-compatible wallet (like OKX Wallet)!');
+  }
+}
+
+async function updateWalletDisplay(account) {
+  userAccount = account;
+  const walletDisplay = document.getElementById('walletDisplay');
+  const connectBtn = document.getElementById('connectBtn');
+  const listItemBtn = document.getElementById('listItemBtn');
+  const adminBtn = document.getElementById('adminBtn');
+  const purchaseHistoryBtn = document.getElementById('purchaseHistoryBtn'); // Get the new button
+   const homeBtnHeader = document.getElementById('homeBtnHeader'); // Get the Home button in header
+
+
+   if (userAccount) {
+      const short = userAccount.slice(0, 6) + "..." + userAccount.slice(-4);
+      walletDisplay.textContent = `Wallet: ${short}`;
+      connectBtn.textContent = '✅ Connected';
+
+      // Show Purchase History button when wallet is connected
+      if (purchaseHistoryBtn) purchaseHistoryBtn.style.display = 'inline-block';
+
+
+      // Manage visibility of other buttons based on wallet type
+      if (userAccount.toLowerCase() === ADMIN_WALLET.toLowerCase()) {
+        adminBtn.style.display = 'inline-block';
+        listItemBtn.style.display = 'none';
+      } else {
+        adminBtn.style.display = 'none';
+        listItemBtn.style.display = 'inline-block';
+      }
+       // The Home button in the header should always be visible
+       if (homeBtnHeader) homeBtnHeader.style.display = 'inline-block';
+
+
+   } else {
+        // Wallet is disconnected
+        walletDisplay.textContent = 'Wallet: —';
+        connectBtn.textContent = '🔌 Connect Wallet';
+        adminBtn.style.display = 'none';
+        listItemBtn.style.display = 'none';
+        // Hide Purchase History button when disconnected
+        if (purchaseHistoryBtn) purchaseHistoryBtn.style.display = 'none';
+         // The Home button in the header should always be visible
+        if (homeBtnHeader) homeBtnHeader.style.display = 'inline-block';
+
+   }
+}
+
+
+// Handle accounts changed event
+function handleAccountsChanged(accounts) {
+    console.log('Accounts changed:', accounts);
+    if (accounts.length === 0) {
+        // Wallet locked or no accounts connected
+        console.log('Please connect to MetaMask.');
+        disconnectWallet(); // Treat as disconnected in the UI
+    } else if (accounts[0].toLowerCase() !== userAccount?.toLowerCase()) {
+        // Account changed - update display and load new user data
+        console.log('Account changed to:', accounts[0]);
+        updateWalletDisplay(accounts[0]);
+        localStorage.setItem('walletAddress', accounts[0]); // Store new connected wallet
+        loadUserProfileData(accounts[0]); // Load profile data for the new account
+    }
+}
+
+// Handle chain changed event
+function handleChainChanged(chainId) {
+  console.log('Chain changed to:', chainId);
+  alert('Ethereum network changed. Please reload the page.');
+   window.location.reload(); // Force a reload
+}
+
+
+function disconnectWallet() {
+  userAccount = null;
+  provider = null;
+  signer = null;
+  if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum.removeListener('chainChanged', handleChainChanged);
+    }
+  localStorage.removeItem('walletAddress'); // Clear stored wallet
+  updateWalletDisplay(null); // Update UI
+  // Clear profile specific data display
+  document.getElementById('profileWalletAddress').textContent = 'Not Connected';
+  document.getElementById('profilePhoto').src = 'placeholder-profile.png'; // Reset photo
+   document.getElementById('uploadStatus').textContent = '';
+   // Clear embedded lists and show connect message
+   document.getElementById('userLatestListings').innerHTML = '<p class="no-data-message">Connect wallet to see your listings.</p>';
+   document.getElementById('userLatestBuyerOrders').innerHTML = '<p class="no-data-message">Connect wallet to see your purchase history.</p>';
+   document.getElementById('userLatestSellerOrders').innerHTML = '<p class="no-data-message">Connect wallet to see orders for your items.</p>';
+
+  console.log("Wallet display disconnected.");
+}
+
+
+// --- User Profile Specific Logic ---
+
+// Load user profile data (like photo) from Firebase based on wallet address
+async function loadUserProfileData(userWalletAddress) {
+  try {
+    // Update profile wallet address display
+    document.getElementById('profileWalletAddress').textContent = userWalletAddress;
+
+    // Load profile photo from Firebase Storage
+    const photoRef = storage.ref(`profile_photos/${userWalletAddress}.jpg`);
+    try {
+      const photoURL = await photoRef.getDownloadURL();
+      document.getElementById('profilePhoto').src = photoURL;
+    } catch (photoError) {
+      console.log('No profile photo found for user:', userWalletAddress);
+      // Keep default placeholder image
+    }
+
+    // Load user bio from Firestore
+    const userDoc = await db.collection('users').doc(userWalletAddress).get();
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      if (userData.bio) {
+        document.getElementById('userBio').value = userData.bio;
+      }
+    }
+
+    // Load user's latest listings
+    await loadUserLatestListings(userWalletAddress);
+
+  } catch (error) {
+    console.error('Error loading user profile data:', error);
+  }
+}
+
+// Upload profile photo to Firebase Storage
+async function uploadProfilePhoto() {
+  if (!userAccount) {
+    alert('Please connect your wallet first.');
+    return;
+  }
+
+  const fileInput = document.getElementById('profilePhotoFile');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert('Please select a file first.');
+    return;
+  }
+
+  try {
+    const photoRef = storage.ref(`profile_photos/${userAccount}.jpg`);
+    await photoRef.put(file);
+    const photoURL = await photoRef.getDownloadURL();
+
+    // Update the profile photo display
+    document.getElementById('profilePhoto').src = photoURL;
+    document.getElementById('uploadStatus').textContent = 'Photo uploaded successfully!';
+
+  } catch (error) {
+    console.error('Error uploading photo:', error);
+    document.getElementById('uploadStatus').textContent = 'Upload failed: ' + error.message;
+  }
+}
+
+// Save user bio to Firestore
+async function saveBio() {
+  if (!userAccount) {
+    alert('Please connect your wallet first.');
+    return;
+  }
+
+  const bio = document.getElementById('userBio').value;
+
+  try {
+    await db.collection('users').doc(userAccount).set({
+      bio: bio,
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    document.getElementById('bioSaveStatus').textContent = 'Bio saved successfully!';
+  } catch (error) {
+    console.error('Error saving bio:', error);
+    document.getElementById('bioSaveStatus').textContent = 'Save failed: ' + error.message;
+  }
+}
+
+
+// Handle file selection
+document.getElementById('profilePhotoFile')?.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+    if (file) {
+        if(uploadPhotoBtn) uploadPhotoBtn.disabled = false; // Enable upload button
+        document.getElementById('uploadStatus').textContent = `Selected: ${file.name}`;
+    } else {
+        if(uploadPhotoBtn) uploadPhotoBtn.disabled = true; // Disable if no file
+         document.getElementById('uploadStatus').textContent = '';
+    }
+});
+
+
+// Handle photo upload
+async function uploadProfilePhoto() {
+    const fileInput = document.getElementById('profilePhotoFile');
+    const file = fileInput.files[0];
+     const uploadStatus = document.getElementById('uploadStatus');
+
+    if (!userAccount) {
+        alert('Please connect your wallet before uploading a photo.');
+         uploadStatus.textContent = 'Connect wallet to upload photo.';
+        return;
+    }
+    if (!file) {
+        alert('Please select a file first.');
+         uploadStatus.textContent = 'Select a file first.';
+        return;
+    }
+
+    const photoPath = `profile_photos/${userAccount.toLowerCase()}`; // Use wallet address as the filename
+    const photoRef = storage.ref(photoPath);
+
+    uploadStatus.textContent = 'Uploading...';
+    try {
+        const snapshot = await photoRef.put(file); // Upload the file
+        const downloadURL = await snapshot.ref.getDownloadURL(); // Get the download URL
+
+        // Update the profile photo on the page
+        document.getElementById('profilePhoto').src = downloadURL;
+        uploadStatus.textContent = 'Upload successful!';
+        console.log("Profile photo uploaded and updated:", downloadURL);
+
+        // Optionally save the download URL to Firestore if you have a user document
+        // await db.collection('users').doc(userAccount.toLowerCase()).set({
+        //     profilePhotoUrl: downloadURL,
+        //     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        // }, { merge: true }); // Use merge to avoid overwriting other fields
+
+    } catch (error) {
+        console.error("Error uploading profile photo:", error);
+        uploadStatus.textContent = 'Upload failed: ' + error.message;
+        alert('Upload failed: ' + error.message);
+    }
+}
+
+// --- Embedded List/Order Display Functions ---
+
+// Render a single product item for the user's listings list
+function renderUserListingItem(product) {
+     const ethPrice = product.ethPrice || 'N/A';
+     const usdValue = (ethToUsd && product.ethPrice) ? (product.ethPrice * ethToUsd).toFixed(2) : 'N/A';
+     const descriptionPreview = product.description ? product.description.substring(0, 80) + (product.description.length > 80 ? '...' : '') : 'No description';
+
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'embedded-list-item';
+    itemDiv.innerHTML = `
+        <img src="${product.image || 'placeholder-image.png'}" alt="${product.name}">
+        <div class="item-details">
+            <h4>${product.name || 'Untitled Product'}</h4>
+            <p>${ethPrice} ETH ${ethToUsd ? '(~$' + usdValue + ')' : ''}</p>
+            <p>${descriptionPreview}</p>
+        </div>
+        `;
+     // Add click handler to view product page
+     itemDiv.style.cursor = 'pointer';
+     itemDiv.onclick = () => {
+         if (product.id) {
+             window.location.href = `product.html?id=${product.id}`;
+         } else {
+             alert('Product ID not available.');
+         }
+     };
+    return itemDiv;
+}
+
+// Render a single order item (can be used for buyer or seller orders)
+function renderOrderItem(order, type = 'buyer') { // type can be 'buyer' or 'seller'
+     const orderDate = order.timestamp ? new Date(order.timestamp.toDate()).toLocaleString() : 'N/A';
+     const quantity = order.quantity || 1;
+     const productName = order.productName || 'N/A';
+     const buyerWallet = order.buyerWallet || 'N/A';
+     const sellerWallet = order.sellerWallet || 'N/A'; // Assuming sellerWallet is stored on order
+     const totalEth = order.totalEth || 'N/A'; // Assuming totalEth is stored on order
+
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'embedded-list-item';
+
+    let detailsHTML = '';
+    if (type === 'buyer') {
+        detailsHTML = `
+            <h4>Purchased: ${productName} x ${quantity}</h4>
+            <p>Total Paid: ${totalEth} ETH</p>
+            <p>Date: ${orderDate}</p>
+             `;
+    } else if (type === 'seller') {
+         detailsHTML = `
+             <h4>Order for: ${productName} x ${quantity}</h4>
+             <p>Buyer: ${buyerWallet.slice(0, 6) + '...' + buyerWallet.slice(-4)}</p>
+             <p>Received: ${totalEth} ETH</p>
+             <p>Date: ${orderDate}</p>
+             `;
+    }
+
+    itemDiv.innerHTML = `
+         <div class="item-details">
+             ${detailsHTML}
+         </div>
+         `;
+     // Add click handler to potentially view order details page (if you create one)
+     // itemDiv.style.cursor = 'pointer';
+     // itemDiv.onclick = () => { window.location.href = `order_details.html?id=${order.id}`; };
+
+    return itemDiv;
+}
+
+
+// --- Real-time Firestore Listeners ---
+
+let userListingsListener = null;
+let userBuyerOrdersListener = null;
+let userSellerOrdersListener = null;
+
+// Setup listener for user's listings
+function setupUserListingsListener(userWalletAddress) {
+    const userLatestListingsDiv = document.getElementById('userLatestListings');
+     // Detach previous listener if it exists
+    if (userListingsListener) {
+        userListingsListener(); // Call the unsubscribe function
+    }
+    userLatestListingsDiv.innerHTML = '<p class="no-data-message">Loading your listings...</p>'; // Loading indicator
+
+    if (!userWalletAddress) {
+        userLatestListingsDiv.innerHTML = '<p class="no-data-message">Connect wallet to see your listings.</p>';
+        return;
+    }
+
+    userListingsListener = db.collection('products')
+        .where('sellerWallet', '==', userWalletAddress.toLowerCase())
+        .orderBy('timestamp', 'desc') // Assuming products have a timestamp
+        .limit(5) // Get the latest 5
+        .onSnapshot(snapshot => {
+            userLatestListingsDiv.innerHTML = ''; // Clear current list
+            if (snapshot.empty) {
+                userLatestListingsDiv.innerHTML = '<p class="no-data-message">You have not listed any items yet.</p>';
+                return;
+            }
+            snapshot.docs.forEach(doc => {
+                const product = { id: doc.id, ...doc.data() };
+                userLatestListingsDiv.appendChild(renderUserListingItem(product));
+            });
+            console.log("User listings updated:", snapshot.docs.length);
+        }, error => {
+            console.error("Error listening to user listings:", error);
+            userLatestListingsDiv.innerHTML = '<p class="no-data-message" style="color: red;">Error loading listings.</p>';
+        });
+}
+
+// Load user's latest listings (non-realtime version)
+async function loadUserLatestListings(userWalletAddress) {
+    const userLatestListingsDiv = document.getElementById('userLatestListings');
+    
+    if (!userWalletAddress) {
+        userLatestListingsDiv.innerHTML = '<p class="no-data-message">Connect wallet to see your listings.</p>';
+        return;
+    }
+
+    userLatestListingsDiv.innerHTML = '<p class="no-data-message">Loading your listings...</p>';
+
+    try {
+        const snapshot = await db.collection('products')
+            .where('sellerWallet', '==', userWalletAddress.toLowerCase())
+            .orderBy('timestamp', 'desc')
+            .limit(5)
+            .get();
+
+        userLatestListingsDiv.innerHTML = '';
+        
+        if (snapshot.empty) {
+            userLatestListingsDiv.innerHTML = '<p class="no-data-message">You have not listed any items yet.</p>';
+            return;
+        }
+
+        snapshot.docs.forEach(doc => {
+            const product = { id: doc.id, ...doc.data() };
+            userLatestListingsDiv.appendChild(renderUserListingItem(product));
+        });
+
+    } catch (error) {
+        console.error("Error loading user listings:", error);
+        userLatestListingsDiv.innerHTML = '<p class="no-data-message" style="color: red;">Error loading listings.</p>';
+    }
+}
+
+
+// --- Event Listeners and Initialization ---
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Fetch ETH price on load (needed for displaying USD equivalent)
+    fetchEthToUsd();
+
+    // Wallet connection buttons listeners are set here
+    document.getElementById('connectBtn').addEventListener('click', connectWallet);
+    // Add event listener for the Disconnect button
+    document.getElementById('disconnectWalletBtn')?.addEventListener('click', disconnectWallet);
+
+
+    // Profile photo upload button listener
+    document.getElementById('uploadPhotoBtn')?.addEventListener('click', uploadProfilePhoto);
+    // Initially disable upload button until a file is selected
+     const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+     if(uploadPhotoBtn) uploadPhotoBtn.disabled = true;
+
+     // Listen for file selection to enable upload button
+    document.getElementById('profilePhotoFile')?.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+        const uploadStatus = document.getElementById('uploadStatus');
+        if (file) {
+             if(uploadPhotoBtn) uploadPhotoBtn.disabled = false;
+             if(uploadStatus) uploadStatus.textContent = `Selected: ${file.name}`;
+        } else {
+             if(uploadPhotoBtn) uploadPhotoBtn.disabled = true;
+             if(uploadStatus) uploadStatus.textContent = '';
+        }
+    });
+
+    // Bio save button listener
+    document.getElementById('saveBioBtn')?.addEventListener('click', saveBio);
+
+
+    // --- Wallet Auto-Connection Logic ---
+    // This block attempts to automatically connect the wallet if it was previously connected
+    // and the browser extension is available and unlocked.
+    const storedWallet = localStorage.getItem('walletAddress'); // Check if a wallet address was stored from a previous session
+    if (storedWallet && typeof window.ethereum !== 'undefined') { // Check if a wallet was stored AND the Ethereum provider is available
+        try {
+            provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+            // Use eth_accounts to check for already connected accounts without prompting the user
+            const accounts = await provider.send("eth_accounts", []); // This is the key for non-prompting check
+
+            if (accounts.length > 0 && accounts[0].toLowerCase() === storedWallet.toLowerCase()) {
+                // If accounts are found and the first one matches the stored address, assume connected
+                userAccount = accounts[0]; // Update userAccount variable
+                signer = provider.getSigner(); // Initialize signer after getting provider
+                updateWalletDisplay(userAccount); // Update UI based on wallet
+                console.log("Auto-connected to stored wallet:", userAccount);
+                loadUserProfileData(userAccount); // Load profile data and setup listeners
+
+                // Add listeners for existing connections on load
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+                window.ethereum.on('chainChanged', handleChainChanged);
+
+            } else {
+                // Stored wallet not found, or wallet is locked/disconnected from this site
+                console.log("Stored wallet not found or not connected to this site.");
+                localStorage.removeItem('walletAddress'); // Clear stored wallet as it's no longer valid
+                updateWalletDisplay(null); // Ensure UI is correct (disconnected state)
+            }
+        } catch (error) {
+            console.error("Error during auto-connection check:", error);
+            localStorage.removeItem('walletAddress'); // Clear stored wallet on error
+            updateWalletDisplay(null); // Ensure UI is correct on error
+        }
+    } else {
+        // No stored wallet or window.ethereum is not available
+        updateWalletDisplay(null); // Ensure UI is correct (disconnected state)
+        loadUserProfileData(null); // Clear/reset profile data display and listeners
+        console.log("No stored wallet or Ethereum provider not found.");
+    }
+    // --- End of Wallet Auto-Connection Logic ---
+});
+</script>
+</body>
+</html>
